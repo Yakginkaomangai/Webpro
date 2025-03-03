@@ -60,8 +60,9 @@
         }
         .img-menu{
             width: 100%;
-            height: 120px;
+            height: 250px;
             object-fit: cover;
+            border-radius: 15px;
             
         }
     </style>
@@ -73,20 +74,57 @@
             <img src="/img/promote.png" alt="promote image" class="img_promote">
         </div>
         <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
-            <button class="btn btn-warning btn-lg">
+            <button class="btn btn-warning btn-lg" style="background-color: #009444; border-color: #26794a; color: rgb(255, 255, 255); padding: 15px 30px; font-size: 20px; border-radius: 12px; min-width: 220px;">
                 <a href="/custom" class="nav-link">เลือกแบบเมนูของคุณ</a>
             </button>
-            <button class="btn btn-outline-warning btn-lg">
+            <button class="btn btn-outline-warning btn-lg" style="background-color: #f3a954; border-color: #26794a; color: rgb(255, 255, 255); padding: 15px 30px; font-size: 20px; border-radius: 12px; min-width: 220px;">
                 <a href="/allsandwich" class="nav-link">เลือกแบบเมนูของเรา</a>
             </button>
         </div>
     </div>
-    <div class="menu-section mt-5">
-        <div class="container mt-5">
+    <div class="menu-section mt-1" style="padding-top: 15px;">
+        <div class="container mt-1">
             <div class="d-flex justify-content-between align-items-center">
-                <h3 class="mb-3">SANDWICH</h3>
+                <h3 class="mb-3" style="font-weight: bold;">เเซนวิซ</h3>
                 <button class="btn btn-outline-dark btn-sm">
-                    <a class="nav-link" href="/allsandwich">All</a>
+                    <a class="nav-link" href="/allsandwich">เพิ่มเติม</a>
+                </button>
+            </div>
+            <div class="row mt-2">
+                
+                <div class="col-md-3"><img src="/img/Teriyaki_Crunch.png" class="img-menu"></div>
+                <div class="col-md-3"><img src="/img/sanham.png" class="img-menu"></div>
+                <div class="col-md-3"><img src="/img/Tuna_Mayo.png" class="img-menu"></div>
+                <div class="col-md-3"><img src="/img/Turkey_Ham.png" class="img-menu"></div>
+                
+
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-section mt-1" style="padding-top: 15px;">
+        <div class="container mt-1">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-3" style="font-weight: bold;">อาหารทานเล่น</h3>
+                <button class="btn btn-outline-dark btn-sm">
+                    <a class="nav-link" href="/appetizers">เพิ่มเติม</a>
+                </button>
+            </div>
+            <div class="row mt-2">
+                <% for(let i = 0; i < 4; i++) { %>
+                    <div class="col-md-3"><img src="/img/Teriyaki_Crunch2-1.png" class="img-menu"></div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-section mt-1" style="padding-top: 15px;">
+        <div class="container mt-1">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-3 " style="font-weight: bold;">ชุดคอมโบ้</h3>
+                <button class="btn btn-outline-dark btn-sm">
+                    <a class="nav-link" href="/comboset">เพิ่มเติม</a>
                 </button>
             </div>
             <div class="row mt-2">
@@ -97,44 +135,12 @@
         </div>
     </div>
 
-    <div class="menu-section mt-5">
-        <div class="container mt-5">
+    <div class="menu-section mt-1" style="padding-top: 15px;">
+        <div class="container mt-1">
             <div class="d-flex justify-content-between align-items-center">
-                <h3 class="mb-3">APPETIZERS</h3>
+                <h3 class="mb-3" style="font-weight: bold;">เครื่องดื่ม</h3>
                 <button class="btn btn-outline-dark btn-sm">
-                    <a class="nav-link" href="/appetizers">All</a>
-                </button>
-            </div>
-            <div class="row mt-2">
-                <% for(let i = 0; i < 4; i++) { %>
-                    <div class="col-md-3"><img src="/img/ham.png" class="img-menu"></div>
-                <% } %>
-            </div>
-        </div>
-    </div>
-
-    <div class="menu-section mt-5">
-        <div class="container mt-5">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3 class="mb-3">COMBOSET</h3>
-                <button class="btn btn-outline-dark btn-sm">
-                    <a class="nav-link" href="/comboset">All</a>
-                </button>
-            </div>
-            <div class="row mt-2">
-                <% for(let i = 0; i < 4; i++) { %>
-                    <div class="col-md-3"><img src="/img/ham.png" class="img-menu"></div>
-                <% } %>
-            </div>
-        </div>
-    </div>
-
-    <div class="menu-section mt-5">
-        <div class="container mt-5">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3 class="mb-3">DRINKS</h3>
-                <button class="btn btn-outline-dark btn-sm">
-                    <a class="nav-link" href="/drinks">All</a>
+                    <a class="nav-link" href="/drinks">เพิ่มเติม</a>
                 </button>
             </div>
             <div class="row mt-2">
