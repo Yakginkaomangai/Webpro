@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body id="register-page">
+    <%- include('partials/navbar') %>
+
+    <main>
+    <div class="container center-container mt-5">
+        <div class="row justify-content-center align-items-center">
+            <!-- ฟอร์มสมัครสมาชิก -->
+            <div class="col-lg-6 col-md-8">
+                <div class="register-box">
+                    <h2 class="text-center mb-3">Sign Up for Exclusive Delivery Deals!</h2>
+                    
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">First name *</label>
+                                <input type="text" class="form-control" placeholder="First name" required>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">Last name *</label>
+                                <input type="text" class="form-control" placeholder="Last name" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Date of birth *</label>
+                            <input type="date" class="form-control" required>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" placeholder="Email" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">Password *</label>
+                                <input type="password" class="form-control" placeholder="At least 6 characters" required>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">Confirm password *</label>
+                                <input type="password" class="form-control" placeholder="Confirm password" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Phone number *</label>
+                            <input type="tel" class="form-control" placeholder="xxx-xxx-xxxx" required>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Gender</label><br>
+                            <input type="radio" name="gender" value="female"> Female
+                            <input type="radio" name="gender" value="male"> Male
+                            <input type="radio" name="gender" value="none" checked> None
+                        </div>
+
+                        <div class="mb-3">
+                            <input type="checkbox"> 
+                            <label class="form-label">I am interested in receiving promotions and updates.</label>
+                        </div>
+
+                        <button class="btn btn-success w-100 mt-2">Create Account</button>
+
+                        <p class="text-center mt-3">
+                            Already have an account? <a href="/login" class="text-success">Sign in</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- รูปภาพ -->
+            <div class="col-lg-4 col-md-6 text-center mt-3">
+                <div class="promo-container">
+                    <img src="/img/promote.png" alt="Promo Image" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+    </main>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

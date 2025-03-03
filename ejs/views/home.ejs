@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Restaurant Menu</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+         
+
+        .hero-section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        button:hover, 
+        a.nav-link:hover, 
+        .bg-light:hover {
+            background-color: #50a777 !important; /* สีเขียวอ่อน */
+            color: white !important;
+            transition: 0.3s ease-in-out;
+        }
+
+        .menu-section {
+            padding: 50px 0;
+        }
+
+        .menu-category {
+            margin-top: 30px;
+        }
+
+        
+        .btn {
+            font-family: "Oswald", sans-serif;
+            font-weight: 600;
+        }
+
+        .menu-text {
+            font-family: "Roboto Slab", serif;
+            font-weight: 400;
+        }
+        .img_promote {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .promo-container {
+            width: 100%;
+            height: 570px; /* กำหนดความสูงให้แน่นอน */
+            overflow: hidden; /* ป้องกันภาพล้นขอบ */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .img-menu{
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            
+        }
+    </style>
+</head>
+<body id="home-page" class="d-flex flex-column min-vh-100">
+    <%- include('partials/navbar') %>
+    <div class="container text-center mt-5 mb-5">
+        <div class="promo-container bg-light border mb-5">
+            <img src="/img/promote.png" alt="promote image" class="img_promote">
+        </div>
+        <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+            <button class="btn btn-warning btn-lg">
+                <a href="/custom" class="nav-link">เลือกแบบเมนูของคุณ</a>
+            </button>
+            <button class="btn btn-outline-warning btn-lg">
+                <a href="/allsandwich" class="nav-link">เลือกแบบเมนูของเรา</a>
+            </button>
+        </div>
+    </div>
+    <div class="menu-section mt-5">
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-3">SANDWICH</h3>
+                <button class="btn btn-outline-dark btn-sm">
+                    <a class="nav-link" href="/allsandwich">All</a>
+                </button>
+            </div>
+            <div class="row mt-2">
+                <% for(let i = 0; i < 4; i++) { %>
+                    <div class="col-md-3"><img src="/img/ham.png" class="img-menu"></div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-section mt-5">
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-3">APPETIZERS</h3>
+                <button class="btn btn-outline-dark btn-sm">
+                    <a class="nav-link" href="/appetizers">All</a>
+                </button>
+            </div>
+            <div class="row mt-2">
+                <% for(let i = 0; i < 4; i++) { %>
+                    <div class="col-md-3"><img src="/img/ham.png" class="img-menu"></div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-section mt-5">
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-3">COMBOSET</h3>
+                <button class="btn btn-outline-dark btn-sm">
+                    <a class="nav-link" href="/comboset">All</a>
+                </button>
+            </div>
+            <div class="row mt-2">
+                <% for(let i = 0; i < 4; i++) { %>
+                    <div class="col-md-3"><img src="/img/ham.png" class="img-menu"></div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-section mt-5">
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-3">DRINKS</h3>
+                <button class="btn btn-outline-dark btn-sm">
+                    <a class="nav-link" href="/drinks">All</a>
+                </button>
+            </div>
+            <div class="row mt-2">
+                <% for(let i = 0; i < 4; i++) { %>
+                    <div class="col-md-3"><img src="/img/ham.png" class="img-menu"></div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+    <%- include('partials/footer') %>
+</body>
+</html>
