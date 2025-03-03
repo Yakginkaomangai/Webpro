@@ -3,7 +3,15 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const sqlite3 = require('sqlite3').verbose();
 
+// Connect to SQLite database
+let db = new sqlite3.Database('project.db', (err) => {    
+    if (err) {
+        return console.error(err.message);
+    }
+    console.log('Connected to the SQlite database.');
+  });
 // ตั้งค่า EJS เป็น View Engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
