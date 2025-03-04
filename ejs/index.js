@@ -110,42 +110,63 @@ app.post('/register', async (req, res) => {
 
 app.get('/allsandwich', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    res.render('allsandwich', { isLoggedIn,
-        sandwiches: [
-            { name: "Bacon and Cheese", price: 109, image: "/img/ham.png" },
-            { name: "Ham Cheese", price: 89, image: "/img/ham.png" },
-            { name: "Extra Cheese", price: 99, image: "/img/ham.png" },
-            { name: "Blackpepper Chicken Breast", price: 119, image: "/img/ham.png" },
-            { name: "BBQ Chicken", price: 99, image: "/img/ham.png" },
-            { name: "Spicy Chicken", price: 99, image: "/img/ham.png" }
-        ]
+    db.all("SELECT name, price FROM menu WHERE type = 'sandwich'", (err, rows) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error fetching sandwiches data.");
+        }
+         // ส่งข้อมูลไปยังหน้า allsandwich
+         res.render('allsandwich', { 
+            isLoggedIn,
+            sandwiches: rows.map(row => ({
+                name: row.name,
+                price: row.price,
+                image: "/img/ham.png" // แทนค่าภาพด้วย default image
+            }))
+        });
     });
 });
 
 app.get('/comboset', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    const comboset = [
-        { name: 'Mashed Potato', price: 79, image: '/img/ham.png' },
-        { name: 'Croissant', price: 99, image: '/img/ham.png' },
-        { name: 'Cookie', price: 69, image: '/img/ham.png' },
-        { name: 'French Fries', price: 89, image: '/img/ham.png' },
-        { name: 'Fried Onions', price: 79, image: '/img/ham.png' },
-        { name: 'Cheese Sticks', price: 99, image: '/img/ham.png' }
-    ];
+    db.all("SELECT name, price FROM menu  ", (err, rows) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error fetching comboset data.");
+        }
+         // ส่งข้อมูลไปยังหน้า allsandwich
+         res.render('comboset', { 
+            isLoggedIn,
+            comboset: rows.map(row => ({
+                name: row.name,
+                price: row.price,
+                image: "/img/ham.png" // แทนค่าภาพด้วย default image
+            }))
+        });
+    });
     res.render('comboset', { isLoggedIn, comboset });
 });
 
 app.get('/appetizers', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    const appetizers = [
-        { name: 'Mashed Potato', price: 79, image: '/img/ham.png' },
-        { name: 'Croissant', price: 99, image: '/img/ham.png' },
-        { name: 'Cookie', price: 69, image: '/img/ham.png' },
-        { name: 'French Fries', price: 89, image: '/img/ham.png' },
-        { name: 'Fried Onions', price: 79, image: '/img/ham.png' },
-        { name: 'Cheese Sticks', price: 99, image: '/img/ham.png' }
-    ];
-    res.render('appetizers', { isLoggedIn, appetizers });
+
+    // ดึงข้อมูลจากฐานข้อมูลที่ type = 'appetizer'
+    db.all("SELECT name, price FROM menu WHERE type = 'appitizer'", (err, rows) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error fetching appetizers data.");
+        }
+
+        // ส่งข้อมูลไปยังหน้า appetizers
+        res.render('appetizers', { 
+            isLoggedIn, 
+            appetizers: rows.map(row => ({
+                name: row.name,
+                price: row.price,
+                image: row.image || "/img/default.png" // ใช้ default image ถ้าไม่มีภาพใน db
+            }))
+        });
+    });
 });
 
 app.get('/drinks', (req, res) => {
