@@ -1,5 +1,7 @@
 const express = require('express');
 const path = require('path');
+const bodyParser = require('body-parser');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,9 +14,11 @@ let db = new sqlite3.Database('project.db', (err) => {
     }
     console.log('Connected to the SQlite database.');
   });
+
 // ตั้งค่า EJS เป็น View Engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // เสิร์ฟไฟล์ Static
 app.use(express.static(path.join(__dirname, 'public')));
@@ -33,7 +37,33 @@ app.get('/checkout', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-    res.render('register');
+    const success = req.query.success ? true : false;
+    res.render('register', { success });
+});
+
+app.post('/register', async (req, res) => {
+    const { first_name, last_name, dob, email, password, confirm_password, phone, gender } = req.body;
+
+    // Check if passwords match
+    if (password !== confirm_password) {
+        return res.send("Error: Passwords do not match!");
+    }
+
+    // Hash password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user into database
+    const sql = `
+        INSERT INTO users (first_name, last_name, dob, email, password, phone, gender)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.run(sql, [first_name, last_name, dob, email, hashedPassword, phone, gender], function (err) {
+        if (err) {
+            return res.send('Error: ' + err.message);
+        }
+        res.redirect('/register?success=1');
+    });
 });
 
 app.get('/allsandwich', (req, res) => {
