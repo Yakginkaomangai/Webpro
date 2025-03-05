@@ -129,7 +129,7 @@ app.get('/allsandwich', (req, res) => {
 
 app.get('/comboset', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT name, price FROM menu  ", (err, rows) => {
+    db.all("SELECT name, price FROM menu WHERE type = 'comboset' ", (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Error fetching comboset data.");
@@ -144,7 +144,6 @@ app.get('/comboset', (req, res) => {
             }))
         });
     });
-    res.render('comboset', { isLoggedIn, comboset });
 });
 
 app.get('/appetizers', (req, res) => {
@@ -189,10 +188,14 @@ app.get('/drinks', (req, res) => {
 });
 
 
-
 app.get('/custom', (req, res) => {
+    const toppings = [
+        { id: 1, name: 'Bacon', image: '/images/bacon.png', price: 10 },
+        { id: 2, name: 'Cheese', image: '/images/cheese.png', price: 15 },
+        { id: 3, name: 'Lettuce', image: '/images/lettuce.png', price: 5 },
+    ];
     const isLoggedIn = req.session && req.session.user ? true : false;
-    res.render('custom', { isLoggedIn });
+    res.render('custom', {isLoggedIn, toppings});
 });
 
 // เริ่มเซิร์ฟเวอร์
