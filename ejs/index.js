@@ -163,7 +163,7 @@ app.get('/appetizers', (req, res) => {
             appetizers: rows.map(row => ({
                 name: row.name,
                 price: row.price,
-                image: row.image || "/img/default.png" // ใช้ default image ถ้าไม่มีภาพใน db
+                image: row.image || "/img/ham.png" // ใช้ default image ถ้าไม่มีภาพใน db
             }))
         });
     });
@@ -171,15 +171,21 @@ app.get('/appetizers', (req, res) => {
 
 app.get('/drinks', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    const drinks = [
-        { name: 'Coke', price: 30, image: '/img/coke.png' },
-        { name: 'Sprite', price: 30, image: '/img/sprite.png' },
-        { name: 'Fanta', price: 30, image: '/img/fanta.png' },
-        { name: 'Orange Juice', price: 40, image: '/img/orange_juice.png' },
-        { name: 'Lemon Tea', price: 45, image: '/img/lemon_tea.png' },
-        { name: 'Iced Coffee', price: 50, image: '/img/iced_coffee.png' }
-    ];
-    res.render('drinks', { isLoggedIn, drinks });
+    db.all("SELECT name, price FROM menu WHERE type = 'drink'", (err, rows) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error fetching drinks data.");
+        }
+         // ส่งข้อมูลไปยังหน้า allsandwich
+         res.render('drinks', { 
+            isLoggedIn,
+            drinks: rows.map(row => ({
+                name: row.name,
+                price: row.price,
+                image: "/img/ham.png" // แทนค่าภาพด้วย default image
+            }))
+        });
+    });
 });
 
 
