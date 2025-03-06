@@ -59,8 +59,18 @@ app.post('/login', (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.redirect('/login?error=1');
 
-        req.session.user = user; // เก็บข้อมูลผู้ใช้ใน session
-        res.redirect('/'); // กลับไปหน้า home
+        req.session.user = {
+            id: user.user_id,
+            email: user.email,
+            name: user.name
+        }; // เก็บข้อมูลผู้ใช้ใน session
+
+
+         // ✅ บันทึก Session ก่อน Redirect
+        req.session.save(err => {
+            if (err) return res.send('Error saving session: ' + err.message);
+            res.redirect('/'); // กลับไปหน้า Home
+        }); 
     });
 });
 
@@ -110,15 +120,19 @@ app.post('/register', async (req, res) => {
 
 app.get('/allsandwich', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT * FROM menu WHERE type = 'sandwich'", (err, rows) => {
+    
+    db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'sandwich'", (err, rows) => {
         if (err) {
-            console.error(err);
+            console.error("Database error:", err);
             return res.status(500).send("Error fetching sandwiches data.");
         }
-         // ส่งข้อมูลไปยังหน้า allsandwich
-         res.render('allsandwich', { 
+
+        console.log("Fetched sandwiches:", rows); // ✅ ตรวจสอบค่าที่ได้จาก DB
+
+        res.render('allsandwich', { 
             isLoggedIn,
             sandwiches: rows.map(row => ({
+                menu_id: row.menu_id,  // <- ตรวจสอบว่ามีค่าหรือไม่
                 name: row.name,
                 thname: row.thname,
                 price: row.price,
@@ -127,6 +141,7 @@ app.get('/allsandwich', (req, res) => {
         });
     });
 });
+
 
 app.get('/comboset', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
@@ -238,8 +253,70 @@ app.get('/custom', (req, res) => {
             });
         });
     });
-    
 });
+
+app.use(express.json()); // รองรับ JSON ในการรับ-ส่งข้อมูล
+
+// 🛒 1. เพิ่มสินค้าเข้าตะกร้า
+app.post('/cart/add', (req, res) => {
+    if (!req.session.user || !req.session.user.id) {
+        return res.status(401).json({ error: 'กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้า' });
+    }
+
+    const user_id = req.session.user.id; // ✅ ดึง user_id จาก session
+    const { product_id, product_name, price } = req.body;
+
+    db.get(`SELECT * FROM cart WHERE user_id = ? AND product_id = ?`, [user_id, product_id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        if (row) {
+            db.run(`UPDATE cart SET quantity = quantity + 1 WHERE id = ?`, [row.id], function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: 'เพิ่มจำนวนสินค้าในตะกร้าแล้ว' });
+            });
+        } else {
+            db.run(`INSERT INTO cart (user_id, product_id, product_name, price, quantity) VALUES (?, ?, ?, ?, ?)`, 
+                [user_id, product_id, product_name, price, 1], function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: 'เพิ่มสินค้าเข้าตะกร้าเรียบร้อย' });
+            });
+        }
+    });
+});
+
+
+
+// 🗑️ 2. ลบสินค้าออกจากตะกร้า
+app.post('/cart/remove', (req, res) => {
+    const { cart_id } = req.body;
+    db.run(`DELETE FROM cart WHERE id = ?`, [cart_id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'ลบสินค้าออกจากตะกร้าสำเร็จ' });
+    });
+});
+
+// 🔄 3. อัปเดตจำนวนสินค้าในตะกร้า
+app.post('/cart/update', (req, res) => {
+    const { cart_id, quantity } = req.body;
+    db.run(`UPDATE cart SET quantity = ? WHERE id = ?`, [quantity, cart_id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'อัปเดตจำนวนสินค้าเรียบร้อย' });
+    });
+});
+
+// 📌 API ดึงข้อมูลตะกร้าสินค้า
+app.get('/cart/items', (req, res) => {
+    const user_id = req.session.user ? req.session.user.id : null;
+
+    if (!user_id) {
+        return res.status(401).json({ error: 'กรุณาเข้าสู่ระบบก่อนดูตะกร้า' });
+    }
+
+    db.all(`SELECT * FROM cart WHERE user_id = ?`, [user_id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ cart: rows });
+    });
+}); 
 
 // เริ่มเซิร์ฟเวอร์
 app.listen(PORT, () => {
