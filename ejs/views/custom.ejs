@@ -7,6 +7,45 @@
     <link rel="stylesheet" href="/styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .topping-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background-color: white; /* Ensure each topping item has a white background */
+        }
+        .topping-item img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            margin-right: 10px;
+        }
+        .topping-item .details {
+            flex-grow: 1;
+        }
+        .topping-item .quantity-controls {
+            display: flex;
+            align-items: center;
+        }
+        .quantity-controls .btn {
+            border-color: #ddd;
+        }
+        .quantity-controls .btn:hover {
+            background-color: #2E8B57; /* Green color */
+            color: white;
+            border-color: #2E8B57;
+        }
+        .category-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body id="custom-page">
     
@@ -38,7 +77,7 @@
             </div>
         </div>
         
-        <div class="row mt-5">
+        <div class="row mt-5 mb-5">
             <div class="col-lg-8">
                 <h3>Bacon</h3>
                 <p class="text-muted">Enjoy with medium crispy thin pizza with classic topping, spaghetti 129.- and chicken nuggets 6 pcs.</p>
@@ -48,8 +87,8 @@
                     <div class="btn-group">
                         <input type="radio" class="btn-check" name="size" id="small" autocomplete="off" checked>
                         <label class="btn btn-outline-success" for="small">Small</label>
-                        <input type="radio" class="btn-check" name="size" id="large" autocomplete="off">
-                        <label class="btn btn-outline-success" for="large">Medieum</label>
+                        <input type="radio" class="btn-check" name="size" id="medium" autocomplete="off">
+                        <label class="btn btn-outline-success" for="medium">Medieum</label>
                         <input type="radio" class="btn-check" name="size" id="large" autocomplete="off">
                         <label class="btn btn-outline-success" for="large">Large</label>
                     </div>
@@ -65,35 +104,81 @@
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-lg-8">
-                <h4>Add Topping</h4>
-                <div class="d-flex gap-3">
-                    <button class="btn btn-outline-success active" data-category="meat">Meat</button>
-                    <button class="btn btn-outline-success" data-category="vegetables">Vegetables</button>
-                    <button class="btn btn-outline-success" data-category="sauces">Sauces</button>
+        <div class="row mt-5">
+            <h3>Add topping</h3>
+            <div class="col-lg-8 mt-3">
+                <!-- Meat Category -->
+                <div class="category-box">
+                    <h4 class="mb-3">Meat</h4>
+                    <div class="row">
+                        <% ['Bacon', 'Chicken', 'Cheese', 'Black Pepper Chicken Breast', 'Ham', 'BBQ Chicken', 'Spicy Chicken', 'Fried Fish', 'Tuna', 'Pepperoni', 'Teriyaki', 'Turkey'].forEach((item, index) => { %>
+                        <div class="col-md-6 mb-3">
+                            <div class="topping-item">
+                                <img src="/img/<%= item.toLowerCase().replace(/ /g, '-') %>.png" alt="<%= item %>">
+                                <div class="details">
+                                    <h5 class="mb-1"><%= item %></h5>
+                                    <p class="text-success fw-bold">฿39</p>
+                                </div>
+                                <div class="quantity-controls">
+                                    <button class="btn btn-sm btn-outline-secondary">-</button>
+                                    <span class="mx-2">0</span>
+                                    <button class="btn btn-sm btn-outline-secondary">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
                 </div>
 
-                <div class="topping-container mt-3">
-                    <% toppings.forEach(topping => { %>
-                    <div class="topping-item d-flex justify-content-between">
-                        <div>
-                            <img src="<%= topping.image %>" alt="<%= topping.name %>" style="width: 40px; height: 40px; border-radius: 8px; margin-right: 10px;">
-                            <span><%= topping.name %></span>
+                <!-- Vegetables Category -->
+                <div class="category-box mt-4">
+                    <h4 class="mb-3">Vegetables</h4>
+                    <div class="row">
+                        <% ['Lettuce', 'Tomato', 'Carrot', 'Cucumber', 'Olive', 'Shallots', 'Pickled Cucumbers', 'Pickled Chilli', 'Green Chili', 'Bell Pepper', 'Onion'].forEach((item, index) => { %>
+                        <div class="col-md-6 mb-3">
+                            <div class="topping-item">
+                                <img src="/img/<%= item.toLowerCase().replace(/ /g, '-') %>.png" alt="<%= item %>">
+                                <div class="details">
+                                    <h5 class="mb-1"><%= item %></h5>
+                                    <p class="text-success fw-bold">฿15</p>
+                                </div>
+                                <div class="quantity-controls">
+                                    <button class="btn btn-sm btn-outline-secondary">-</button>
+                                    <span class="mx-2">0</span>
+                                    <button class="btn btn-sm btn-outline-secondary">+</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="quantity-control">
-                            <button class="btn btn-sm btn-outline-secondary">-</button>
-                            <span id="topping-qty-<%= topping.id %>">0</span>
-                            <button class="btn btn-sm btn-outline-secondary">+</button>
-                            <p class="m-0 fw-bold text-success">฿<%= topping.price %></p>
-                        </div>
+                        <% }); %>
                     </div>
-                    <% }); %>
+                </div>
+
+                <!-- Sauces Category -->
+                <div class="category-box mt-4">
+                    <h4 class="mb-3">Sauces</h4>
+                    <div class="row">
+                        <% ['Mayonnaise', 'BBQ', 'Chili sauce', 'Ketchup', 'Mustard', 'Tatar', 'Cheese', 'Mayo'].forEach((item, index) => { %>
+                        <div class="col-md-6 mb-3">
+                            <div class="topping-item">
+                                <img src="/img/<%= item.toLowerCase().replace(/ /g, '-') %>.png" alt="<%= item %>">
+                                <div class="details">
+                                    <h5 class="mb-1"><%= item %></h5>
+                                    <p class="text-success fw-bold">฿10</p>
+                                </div>
+                                <div class="quantity-controls">
+                                    <button class="btn btn-sm btn-outline-secondary">-</button>
+                                    <span class="mx-2">0</span>
+                                    <button class="btn btn-sm btn-outline-secondary">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
                 </div>
             </div>
             
+            <!-- Cart Box -->
             <div class="col-lg-4">
-                <h4 class="mb-3">ตะกร้าสินค้า</h4>
                 <div class="cart-box bg-light p-3 rounded shadow-sm">
                     <p>สินค้าในตะกร้า...</p>
                     <button class="btn btn-success w-100">Checkout</button>
@@ -102,9 +187,7 @@
         </div>
     </div>
 
-    <footer class="mt-auto py-4 text-center text-white" style="background-color: #000000;">
-        <p class="m-0">© 2025 Your Restaurant | All Rights Reserved</p>
-    </footer>
+    <%- include('partials/footer') %>
 
 </body>
 </html>
