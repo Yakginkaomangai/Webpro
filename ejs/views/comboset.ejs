@@ -35,9 +35,10 @@
                     <% comboset.forEach(comboset => { %>
                         <div class="col-md-4">
                             <div class="menu-item text-start mt-2" style="border: 2px solid #009444; padding: 20px; border-radius: 15px;">
-                                <img src="<%= comboset.image %>" class="img-fluid w-100" style="height: 180px; object-fit: cover;">
+                                <img src="<%= comboset.img %>" class="img-fluid w-100" style="height: 180px; object-fit: cover;">
                                 <p class="text-success fw-bold small mt-4"><%= comboset.price %> THB</p>
-                                <p class="fw-bold"><%= comboset.name %></p> 
+                                <p class="fw-bold"><%= comboset.name %></p>
+                                <p class="fw-light"><%= comboset.description %></p>  
                                 <div class="hover-content">
                                     <input type="number" class="form-control qty-input" value="1" min="1">
                                     <button class="btn btn-sm btn-success mt-2 w-100">เพิ่มลงตะกร้า</button>

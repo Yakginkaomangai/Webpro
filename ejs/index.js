@@ -110,7 +110,7 @@ app.post('/register', async (req, res) => {
 
 app.get('/allsandwich', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT name, price FROM menu WHERE type = 'sandwich'", (err, rows) => {
+    db.all("SELECT name, thname, price, img FROM menu WHERE type = 'sandwich'", (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Error fetching sandwiches data.");
@@ -120,8 +120,9 @@ app.get('/allsandwich', (req, res) => {
             isLoggedIn,
             sandwiches: rows.map(row => ({
                 name: row.name,
+                thname: row.thname,
                 price: row.price,
-                image: "/img/ham.png" // แทนค่าภาพด้วย default image
+                img: row.img // แทนค่าภาพด้วย default image
             }))
         });
     });
@@ -129,7 +130,7 @@ app.get('/allsandwich', (req, res) => {
 
 app.get('/comboset', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT name, price FROM menu WHERE type = 'comboset' ", (err, rows) => {
+    db.all("SELECT * FROM combo", (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Error fetching comboset data.");
@@ -139,8 +140,9 @@ app.get('/comboset', (req, res) => {
             isLoggedIn,
             comboset: rows.map(row => ({
                 name: row.name,
+                description: row.description,
                 price: row.price,
-                image: "/img/ham.png" // แทนค่าภาพด้วย default image
+                img: row.img// แทนค่าภาพด้วย default image
             }))
         });
     });
@@ -150,7 +152,7 @@ app.get('/appetizers', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
 
     // ดึงข้อมูลจากฐานข้อมูลที่ type = 'appetizer'
-    db.all("SELECT name, price FROM menu WHERE type = 'appitizer'", (err, rows) => {
+    db.all("SELECT name, thname, price, img FROM menu WHERE type = 'appetizer'", (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Error fetching appetizers data.");
@@ -161,8 +163,9 @@ app.get('/appetizers', (req, res) => {
             isLoggedIn, 
             appetizers: rows.map(row => ({
                 name: row.name,
+                thname: row.thname,
                 price: row.price,
-                image: row.image || "/img/ham.png" // ใช้ default image ถ้าไม่มีภาพใน db
+                img: row.img // ใช้ default image ถ้าไม่มีภาพใน db
             }))
         });
     });
@@ -170,7 +173,7 @@ app.get('/appetizers', (req, res) => {
 
 app.get('/drinks', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT name, price FROM menu WHERE type = 'drink'", (err, rows) => {
+    db.all("SELECT name, thname, price, img FROM menu WHERE type = 'drink'", (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Error fetching drinks data.");
@@ -180,8 +183,9 @@ app.get('/drinks', (req, res) => {
             isLoggedIn,
             drinks: rows.map(row => ({
                 name: row.name,
+                thname: row.thname,
                 price: row.price,
-                image: "/img/ham.png" // แทนค่าภาพด้วย default image
+                img: row.img // แทนค่าภาพด้วย default image
             }))
         });
     });
