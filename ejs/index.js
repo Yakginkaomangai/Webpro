@@ -110,7 +110,7 @@ app.post('/register', async (req, res) => {
 
 app.get('/allsandwich', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT name, thname, price, img FROM menu WHERE type = 'sandwich'", (err, rows) => {
+    db.all("SELECT * FROM menu WHERE type = 'sandwich'", (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Error fetching sandwiches data.");
@@ -122,7 +122,7 @@ app.get('/allsandwich', (req, res) => {
                 name: row.name,
                 thname: row.thname,
                 price: row.price,
-                img: row.img // แทนค่าภาพด้วย default image
+                img: row.img
             }))
         });
     });
@@ -142,7 +142,7 @@ app.get('/comboset', (req, res) => {
                 name: row.name,
                 description: row.description,
                 price: row.price,
-                img: row.img// แทนค่าภาพด้วย default image
+                img: row.img
             }))
         });
     });
@@ -152,7 +152,7 @@ app.get('/appetizers', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
 
     // ดึงข้อมูลจากฐานข้อมูลที่ type = 'appetizer'
-    db.all("SELECT name, thname, price, img FROM menu WHERE type = 'appetizer'", (err, rows) => {
+    db.all("SELECT * FROM menu WHERE type = 'appetizer'", (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Error fetching appetizers data.");
@@ -165,7 +165,7 @@ app.get('/appetizers', (req, res) => {
                 name: row.name,
                 thname: row.thname,
                 price: row.price,
-                img: row.img // ใช้ default image ถ้าไม่มีภาพใน db
+                img: row.img
             }))
         });
     });
@@ -173,7 +173,7 @@ app.get('/appetizers', (req, res) => {
 
 app.get('/drinks', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT name, thname, price, img FROM menu WHERE type = 'drink'", (err, rows) => {
+    db.all("SELECT * FROM menu WHERE type = 'drink'", (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Error fetching drinks data.");
@@ -185,7 +185,7 @@ app.get('/drinks', (req, res) => {
                 name: row.name,
                 thname: row.thname,
                 price: row.price,
-                img: row.img // แทนค่าภาพด้วย default image
+                img: row.img
             }))
         });
     });
