@@ -146,8 +146,7 @@
 
         <div class="row mt-5 mb-5">
             <div class="col-lg-8">
-                <h3>Bacon</h3>
-                <p class="text-muted">Enjoy with medium crispy thin pizza with classic topping, spaghetti 129.- and chicken nuggets 6 pcs.</p>
+                <h2>Custom Sandwich</h2>
                 <img src="/img/promote.png" alt="Custom Sandwich" class="img-fluid rounded">
                 <div class="d-flex align-items-center gap-3 mt-3">
                     <label class="form-label mb-0">Size:</label>
@@ -159,14 +158,6 @@
                         <input type="radio" class="btn-check" name="size" id="large" autocomplete="off">
                         <label class="btn btn-outline-success" for="large">Large</label>
                     </div>
-                    <label class="form-label mb-0">Bread:</label>
-                    <select class="form-select" style="width: 150px;">
-                        <option>Flatbread</option>
-                        <option>Hearty Italian</option>
-                        <option>Honey Oat</option>
-                        <option>Wheat Bread</option>
-                        <option>Italian</option>
-                    </select>
                 </div>
             </div>
         </div>
@@ -174,6 +165,29 @@
         <div class="row mt-5">
             <h3>Add topping</h3>
             <div class="col-lg-8 mt-3">
+                <!-- Bread Category -->
+                <div class="category-box">
+                    <h4 class="mb-3">Bread</h4>
+                    <div class="row">
+                        <% breads.forEach(breads => { %>
+                        <div class="col-md-6 mb-3">
+                            <div class="topping-item">
+                                <img src="<%= breads.img %>">
+                                <div class="details">
+                                    <h5 class="mb-1"><%= breads.name %></h5>
+                                    <p class="text-success fw-bold"><%= breads.price %></p>
+                                </div>
+                                <div class="quantity-controls">
+                                    <button class="btn btn-sm btn-outline-secondary">-</button>
+                                    <span class="mx-2">0</span>
+                                    <button class="btn btn-sm btn-outline-secondary">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                </div>
+
                 <!-- Meat Category -->
                 <div class="category-box">
                     <h4 class="mb-3">Meat</h4>

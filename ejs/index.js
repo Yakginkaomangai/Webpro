@@ -540,47 +540,59 @@ app.get('/drinks', (req, res) => {
 app.get('/custom', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const breads = "SELECT thname, price, img FROM ingredients WHERE type = 'Bread'"
     const meats = "SELECT thname, price, img FROM ingredients WHERE type = 'Meat'"
     const vegetables = "SELECT thname, price, img FROM ingredients WHERE type = 'Vegetables'"
     const sauces = "SELECT thname, price, img FROM ingredients WHERE type = 'Sauces'"
-
-    db.all(meats, [], (err, meats) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('Database error');
-        }
-
-        db.all(vegetables, [], (err, vegetables) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).send('Database error');
-            }
-
-            db.all(sauces, [], (err, sauces) => {
+    
+            db.all(breads, [], (err, breads) => {
                 if (err) {
                     console.error(err);
                     return res.status(500).send('Database error');
                 }
+                db.all(meats, [], (err, meats) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).send('Database error');
+                    }
 
-                // ส่งข้อมูลไปยัง view
-                res.render('custom', { 
-                    isLoggedIn,
-                    isAdmin, 
-                    meats: meats.map(row => ({
-                        name: row.thname,
-                        price: row.price,
-                        img: row.img
-                    })), 
-                    vegetables: vegetables.map(row => ({
-                        name: row.thname,
-                        price: row.price,
-                        img: row.img
-                    })), 
-                    sauces: sauces.map(row => ({
-                        name: row.thname,
-                        price: row.price,
-                        img: row.img
-                    })) 
+                    db.all(vegetables, [], (err, vegetables) => {
+                        if (err) {
+                            console.error(err);
+                            return res.status(500).send('Database error');
+                        }
+
+                        db.all(sauces, [], (err, sauces) => {
+                            if (err) {
+                                console.error(err);
+                                return res.status(500).send('Database error');
+                            }
+
+                        // ส่งข้อมูลไปยัง view
+                        res.render('custom', { 
+                            isLoggedIn,
+                            isAdmin,
+                            breads: breads.map(row => ({
+                                name: row.thname,
+                                price: row.price,
+                                img: row.img
+                            })),  
+                            meats: meats.map(row => ({
+                                name: row.thname,
+                                price: row.price,
+                                img: row.img
+                            })), 
+                            vegetables: vegetables.map(row => ({
+                                name: row.thname,
+                                price: row.price,
+                                img: row.img
+                            })), 
+                            sauces: sauces.map(row => ({
+                                name: row.thname,
+                                price: row.price,
+                                img: row.img
+                        })) 
+                    });
                 });
             });
         });
