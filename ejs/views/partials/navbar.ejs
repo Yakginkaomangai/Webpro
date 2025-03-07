@@ -1,14 +1,24 @@
 <nav class="navbar navbar-expand-lg fixed-top shadow-sm">
     <div class="container">
         <a class="navbar-brand" href="/">
-            <img src="/img/LOGO.png" alt="Logo" style="width: 80px; height: 80px;">
+            <img src="/img/LOGO.png" alt="Logo" style="width: 50px; height: 50px;">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
-                <% if (isLoggedIn) { %>
+                <% if (isLoggedIn && isAdmin) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin" style="background-color: #1fbff4; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; font-size:small;">จัดการระะบบ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout" style="background-color: #d9534f; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; font-size:small;">ออกจากระบบ</a>
+                    </li>
+                <% } else if (isLoggedIn) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user" style="background-color: #1fbff4; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; font-size:small;">โปรไฟล์ของฉัน</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/logout" style="background-color: #d9534f; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; font-size:small;">ออกจากระบบ</a>
                     </li>

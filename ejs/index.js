@@ -32,11 +32,100 @@ app.use(session({
     cookie: { secure: false }
 }));
 
+// Middleware ตรวจสอบว่าเป็น admin หรือไม่
+function isAdmin(req, res, next) {
+    if (req.session.user && req.session.user.role === 'admin') {
+        return next(); // ถ้าเป็น admin ให้ดำเนินการต่อ
+    } else {
+        return res.status(403).send('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+    }
+}
+
+// หน้า Admin Dashboard
+app.get('/admin', isAdmin, (req, res) => {
+    const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+
+    if (isAdmin) {
+        db.all('SELECT * FROM menu ORDER BY type', (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('เกิดข้อผิดพลาด');
+            }
+            res.render('admin/dashboard', { isLoggedIn, isAdmin, menus: rows });
+        });
+    } else {
+        res.redirect('/login');
+    }
+});
+
+// หน้าเพิ่มเมนู
+app.get('/admin/menu/add', isAdmin, (req, res) => {
+    const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    res.render('admin/addMenu', { isLoggedIn, isAdmin});
+});
+
+// เพิ่มเมนูในฐานข้อมูล
+app.post('/admin/menu/add', isAdmin, (req, res) => {
+    const { name, thname, price, type, img } = req.body;
+
+    const sql = `INSERT INTO menu (name, thname, price, type, img) VALUES (?, ?, ?, ?, ?)`;
+    db.run(sql, [name, thname, price, type, img], function(err) {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มเมนู');
+        }
+        res.redirect('/admin');
+    });
+});
+
+// หน้าแก้ไขเมนู
+app.get('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
+    const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const { menu_id } = req.params;
+    db.get('SELECT * FROM menu WHERE menu_id = ?', [menu_id], (err, row) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('เกิดข้อผิดพลาด');
+        }
+        res.render('admin/editMenu', { isLoggedIn, isAdmin, menu: row });
+    });
+});
+
+// อัปเดตเมนูในฐานข้อมูล
+app.post('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
+    const { menu_id } = req.params;
+    const { name, thname, price, type, img } = req.body;
+
+    const sql = `UPDATE menu SET name = ?, thname = ?, price = ?, type = ?, img = ? WHERE menu_id = ?`;
+    db.run(sql, [name, thname, price, type, img, menu_id], function(err) {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตเมนู');
+        }
+        res.redirect('/admin');
+    });
+});
+
+// ลบเมนู
+app.post('/admin/menu/delete/:menu_id', isAdmin, (req, res) => {
+    const { menu_id } = req.params;
+    db.run('DELETE FROM menu WHERE menu_id = ?', [menu_id], function(err) {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('เกิดข้อผิดพลาดในการลบเมนู');
+        }
+        res.redirect('/admin');
+    });
+});
 
 // Routes
 app.get('/', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    res.render('home', { isLoggedIn }); 
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    res.render('home', {isLoggedIn, isAdmin})
 });
 
 // หน้า Login (เช็ค error message)
@@ -62,7 +151,8 @@ app.post('/login', (req, res) => {
         req.session.user = {
             id: user.user_id,
             email: user.email,
-            name: user.name
+            name: user.name,
+            role: user.role
         }; // เก็บข้อมูลผู้ใช้ใน session
 
 
@@ -84,7 +174,8 @@ app.get('/logout', (req, res) => {
 
 app.get('/checkout', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    res.render('checkout', { isLoggedIn });
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    res.render('checkout', { isLoggedIn, isAdmin });
 });
 
 app.get('/register', (req, res) => {
@@ -120,6 +211,7 @@ app.post('/register', async (req, res) => {
 
 app.get('/allsandwich', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
     
     db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'sandwich'", (err, rows) => {
         if (err) {
@@ -131,6 +223,7 @@ app.get('/allsandwich', (req, res) => {
 
         res.render('allsandwich', { 
             isLoggedIn,
+            isAdmin,
             sandwiches: rows.map(row => ({
                 menu_id: row.menu_id,  // <- ตรวจสอบว่ามีค่าหรือไม่
                 name: row.name,
@@ -145,6 +238,7 @@ app.get('/allsandwich', (req, res) => {
 
 app.get('/comboset', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
     
     db.all("SELECT combo_id, name, description, price, img FROM combo", (err, rows) => {
         if (err) {
@@ -156,6 +250,7 @@ app.get('/comboset', (req, res) => {
 
         res.render('comboset', { 
             isLoggedIn,
+            isAdmin,
             combosets: rows.map(row => ({
                 menu_id: row.combo_id,  // ✅ เปลี่ยนจาก menu_id เป็น combo_id
                 name: row.name,
@@ -171,6 +266,7 @@ app.get('/comboset', (req, res) => {
 
 app.get('/appetizers', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
     
     db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'appetizer'", (err, rows) => {
         if (err) {
@@ -182,6 +278,7 @@ app.get('/appetizers', (req, res) => {
 
         res.render('appetizers', { 
             isLoggedIn,
+            isAdmin,
             appetizers: rows.map(row => ({
                 menu_id: row.menu_id,  
                 name: row.name,
@@ -196,6 +293,7 @@ app.get('/appetizers', (req, res) => {
 
 app.get('/drinks', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
     db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'drink'", (err, rows) => {
         if (err) {
             console.error("Database error:", err);
@@ -204,6 +302,7 @@ app.get('/drinks', (req, res) => {
         console.log("Fetched drinks:", rows);
         res.render('drinks', { 
             isLoggedIn,
+            isAdmin,
             drinks: rows
         });
     });
@@ -211,6 +310,7 @@ app.get('/drinks', (req, res) => {
 
 app.get('/custom', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
     const meats = "SELECT thname, price, img FROM ingredients WHERE type = 'Meat'"
     const vegetables = "SELECT thname, price, img FROM ingredients WHERE type = 'Vegetables'"
     const sauces = "SELECT thname, price, img FROM ingredients WHERE type = 'Sauces'"
@@ -235,7 +335,8 @@ app.get('/custom', (req, res) => {
 
                 // ส่งข้อมูลไปยัง view
                 res.render('custom', { 
-                    isLoggedIn, 
+                    isLoggedIn,
+                    isAdmin, 
                     meats: meats.map(row => ({
                         name: row.thname,
                         price: row.price,
