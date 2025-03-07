@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const fileUpload = require('express-fileupload');
 
-
+const recommendedQuery = `SELECT * FROM menu ORDER BY COALESCE(popularity, 0) DESC LIMIT 3`;
 const app = express();
 const PORT = process.env.PORT || 3000;
 const sqlite3 = require('sqlite3').verbose();
@@ -402,10 +402,51 @@ app.get('/logout', (req, res) => {
 
 
 app.get('/checkout', (req, res) => {
-    const isLoggedIn = req.session && req.session.user ? true : false;
-    const isAdmin = req.session.user && req.session.user.role === 'admin';
-    res.render('checkout', { isLoggedIn, isAdmin });
+    const recommendedQuery = `SELECT * FROM menu ORDER BY COALESCE(popularity, 0) DESC LIMIT 3`;
+    const cartQuery = `
+    SELECT cart.*, menu.name, menu.price, menu.img 
+    FROM cart 
+    JOIN menu ON cart.product_id = menu.menu_id 
+    WHERE cart.user_id = ?`;
+
+
+
+    if (!req.session.user) {
+        return res.redirect('/login'); // ถ้าไม่ได้ล็อกอินให้ไปหน้า login
+    }
+
+    db.all(recommendedQuery, [], (err, recommendedMenu) => {
+        if (err) {
+            console.error("🔥 Database Error (Recommended Menu):", err.message);
+            return res.status(500).send(`🔥 Database Error: ${err.message}`);
+        }
+
+        db.all(cartQuery, [req.session.user.id], (err, cartItems) => {
+            if (err) {
+                console.error("🔥 Database Error (Cart):", err.message);
+                return res.status(500).send(`🔥 Database Error: ${err.message}`);
+            }
+
+            // ✅ คำนวณค่า Subtotal
+            let subtotal = cartItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+            let total = subtotal; // ค่าส่งฟรี
+
+            console.log("✅ Cart Items:", cartItems);
+            console.log("✅ Subtotal:", subtotal);
+            console.log("✅ Total:", total);
+
+            res.render('checkout', {
+                isLoggedIn: req.session.user ? true : false,
+                isAdmin: req.session.user ? req.session.user.role === 'admin' : false,
+                recommendedMenu: recommendedMenu,
+                cartItems: cartItems || [], // ถ้าไม่มีให้ใช้ array ว่าง
+                subtotal: cartItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0),
+                total: cartItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0)
+            });
+        });
+    });
 });
+
 
 app.get('/register', (req, res) => {
     const success = req.query.success ? true : false;
