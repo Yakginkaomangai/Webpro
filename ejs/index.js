@@ -421,6 +421,38 @@ app.get('/cart/items', (req, res) => {
     });
 }); 
 
+
+app.get('/get-toppings', (req, res) => {
+    let db = new sqlite3.Database('project.db');
+    db.all('SELECT * FROM toppings', [], (err, rows) => {
+        if (err) {
+            res.status(500).send({ error: err.message });
+        } else {
+            res.json(rows);
+        }
+    });
+});
+
+app.post('/submit-order', (req, res) => {
+    let db = new sqlite3.Database('project.db');
+    let { cart } = req.body;
+
+    if (!cart || cart.length === 0) {
+        return res.status(400).json({ error: "ตะกร้าสินค้าว่างเปล่า" });
+    }
+
+    let orderId = Date.now();
+    let query = "INSERT INTO orders (order_id, item_name, quantity, price) VALUES (?, ?, ?, ?)";
+    
+    let stmt = db.prepare(query);
+    cart.forEach(item => {
+        stmt.run(orderId, item.name, item.quantity, item.price * item.quantity);
+    });
+    stmt.finalize();
+
+    res.json({ orderId });
+});
+
 // เริ่มเซิร์ฟเวอร์
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

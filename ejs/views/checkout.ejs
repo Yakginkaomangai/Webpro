@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -267,6 +267,40 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+            let cartContainer = document.getElementById("cart-items");
+            let totalPrice = 0;
+        
+            if (cart.length === 0) {
+                cartContainer.innerHTML = "<p>ไม่มีสินค้าในตะกร้า</p>";
+            } else {
+                cartContainer.innerHTML = cart.map(item => `
+                    <li>${item.name} x ${item.quantity} (${item.price * item.quantity} บาท)</li>
+                `).join("");
+                totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            }
+        
+            document.getElementById("total-price").textContent = `ราคารวม: ${totalPrice} บาท`;
+        
+            document.getElementById("submitOrder").addEventListener("click", function () {
+                fetch("/submit-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ cart })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert("คำสั่งซื้อสำเร็จ! หมายเลขออเดอร์: " + data.orderId);
+                    localStorage.removeItem("cart"); // ล้างตะกร้าหลังจากสั่งสำเร็จ
+                    window.location.href = "/";
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        });
+    </script>
+
     <% include('partials/footer') %>
 </body>
-</html> -->
+</html> 
