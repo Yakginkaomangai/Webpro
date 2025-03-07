@@ -599,6 +599,39 @@ app.get('/custom', (req, res) => {
     });
 });
 
+// เส้นทางสำหรับแสดงหน้าข้อมูลผู้ใช้
+app.get('/user', (req, res) => {
+    // ตัวอย่างข้อมูลที่สามารถส่งไปแสดงในหน้า HTML
+    const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const user = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        phone: '123-456-7890',
+        gender: 'ชาย',
+        birthDate: '1990-01-01',
+    };
+
+    const orders = [
+        {
+            id: 12345,
+            status: 'จัดส่งแล้ว',
+            orderDate: '2023-10-01',
+            deliveryDate: '2023-10-05',
+        },
+        {
+            id: 67890,
+            status: 'กำลังดำเนินการ',
+            orderDate: '2023-10-10',
+            deliveryDate: '-',
+        },
+    ];
+
+    // Render หน้า user-detail.ejs พร้อมส่งข้อมูล
+    res.render('user', { isLoggedIn, isAdmin, user, orders });
+});
+
 app.use(express.json()); // รองรับ JSON ในการรับ-ส่งข้อมูล
 
 // 🛒 1. เพิ่มสินค้าเข้าตะกร้า
