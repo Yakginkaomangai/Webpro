@@ -18,7 +18,7 @@
                 <h1 class="my-4 text-center">Admin Dashboard</h1>
             
                 <div class="d-flex justify-content-between">
-                    <a href="/admin/menu/add" class="btn btn-success mb-3">เพิ่มเมนูใหม่</a>
+                    <a href="/admin/ingredients/add" class="btn btn-success mb-3">เพิ่มวัตถุดิบใหม่</a>
                     <div>
                         <a href="/admin" class="btn btn-primary mb-3">เมนูทั้งหมด</a>
                         <a href="/admin/ingredients" class="btn btn-secondary mb-3">วัตถุดิบทั้งหมด</a>
@@ -30,25 +30,25 @@
                     <table class="table table-striped table-bordered">
                         <thead>
                             <tr>
-                                <th>รูปเมนู</th>
-                                <th>ชื่อเมนู</th>
-                                <th>ชื่อเมนูภาษาไทย</th>
+                                <th>รูปวัตถุดิบ</th>
+                                <th>ชื่อวัตถุดิบ</th>
+                                <th>ชื่อวัตถุดิบภาษาไทย</th>
                                 <th>ราคา</th>
                                 <th>ประเภท</th>
                                 <th>จัดการ</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <% menus.forEach(menu => { %>
+                            <% ingredients.forEach(ingredients => { %>
                                 <tr>
-                                    <td><img src="<%= menu.img %>" class="img-fluid w-100" style="height: 150px; object-fit: cover; border-radius: 15px;"></td>
-                                    <td><%= menu.name %></td>
-                                    <td><%= menu.thname %></td>
-                                    <td><%= menu.price %></td>
-                                    <td><%= menu.type %></td>
+                                    <td><img src="<%= ingredients.img %>" class="img-fluid w-100" style="height: 150px; object-fit: cover; border-radius: 15px;"></td>
+                                    <td><%= ingredients.name %></td>
+                                    <td><%= ingredients.thname %></td>
+                                    <td><%= ingredients.price %></td>
+                                    <td><%= ingredients.type %></td>
                                     <td>
-                                        <a href="/admin/menu/edit/<%= menu.menu_id %>" class="btn btn-warning btn-sm">แก้ไข</a>
-                                        <form action="/admin/menu/delete/<%= menu.menu_id %>" method="POST" style="display:inline;">
+                                        <a href="/admin/ingredients/edit/<%= ingredients.ingre_id %>" class="btn btn-warning btn-sm">แก้ไข</a>
+                                        <form action="/admin/ingredients/delete/<%= ingredients.ingre_id %>" method="POST" style="display:inline;">
                                             <button type="submit" class="btn btn-danger btn-sm">ลบ</button>
                                         </form>
                                     </td>

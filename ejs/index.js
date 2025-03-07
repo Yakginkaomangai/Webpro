@@ -1,8 +1,11 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
+const fileUpload = require('express-fileupload');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +23,9 @@ let db = new sqlite3.Database('project.db', (err) => {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(fileUpload());
 
 // เสิร์ฟไฟล์ Static
 app.use(express.static(path.join(__dirname, 'public')));
@@ -67,18 +73,49 @@ app.get('/admin/menu/add', isAdmin, (req, res) => {
 });
 
 // เพิ่มเมนูในฐานข้อมูล
-app.post('/admin/menu/add', isAdmin, (req, res) => {
-    const { name, thname, price, type, img } = req.body;
+app.post('/admin/menu/add', (req, res) => {
+    const { name, thname, price, type } = req.body;
+    
+    // ตรวจสอบค่าที่ได้รับจากฟอร์ม
+    if (!name || !thname || !price || !type) {
+        return res.status(400).send('กรุณากรอกข้อมูลให้ครบ');
+    }
 
-    const sql = `INSERT INTO menu (name, thname, price, type, img) VALUES (?, ?, ?, ?, ?)`;
-    db.run(sql, [name, thname, price, type, img], function(err) {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มเมนู');
+    let newImg = req.files?.img;
+    let imgPath = null; // ตั้งค่าเริ่มต้นเป็น null
+
+    if (newImg) {
+        imgPath = `/img/${type}s/${newImg.name}`;
+        const savePath = path.join(__dirname, 'public', imgPath);
+
+        if (!fs.existsSync(path.dirname(savePath))) {
+            return res.status(400).send('โฟลเดอร์ไม่ถูกต้อง');
         }
-        res.redirect('/admin');
-    });
+
+        newImg.mv(savePath, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+            }
+
+            db.run(
+                'INSERT INTO menu (name, thname, price, type, img) VALUES (?, ?, ?, ?, ?)',
+                [name, thname, price, type, imgPath],
+                (err) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มเมนู');
+                    }
+                    res.redirect('/admin');
+                }
+            );
+        });
+    } else {
+        return res.status(400).send('กรุณาอัปโหลดรูปภาพ');
+    }
 });
+
+
 
 // หน้าแก้ไขเมนู
 app.get('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
@@ -97,15 +134,56 @@ app.get('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
 // อัปเดตเมนูในฐานข้อมูล
 app.post('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
     const { menu_id } = req.params;
-    const { name, thname, price, type, img } = req.body;
+    const { name, thname, price, type } = req.body;
+    let newImg = req.files?.img;
 
-    const sql = `UPDATE menu SET name = ?, thname = ?, price = ?, type = ?, img = ? WHERE menu_id = ?`;
-    db.run(sql, [name, thname, price, type, img, menu_id], function(err) {
+    // ดึง path รูปเดิมจากฐานข้อมูล
+    db.get(`SELECT img FROM menu WHERE menu_id = ?`, [menu_id], (err, row) => {
         if (err) {
             console.error(err);
-            return res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตเมนู');
+            return res.status(500).send('เกิดข้อผิดพลาดในการดึงข้อมูลเมนู');
         }
-        res.redirect('/admin');
+
+        let imgPath = row?.img || null; // ใช้ path เดิมถ้าไม่มีการอัปโหลดใหม่
+
+        if (newImg) {
+            // ใช้โฟลเดอร์ที่มีอยู่แล้ว: public/img/types/
+            imgPath = `/img/${type}s/${newImg.name}`;
+            const savePath = path.join(__dirname, 'public', imgPath);
+
+            // ตรวจสอบว่าโฟลเดอร์มีอยู่หรือไม่ แต่ **ไม่สร้างใหม่**
+            if (!fs.existsSync(path.dirname(savePath))) {
+                return res.status(400).send('โฟลเดอร์ไม่ถูกต้อง');
+            }
+
+            // ย้ายไฟล์ไปยังโฟลเดอร์
+            newImg.mv(savePath, (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send('เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+                }
+
+                // อัปเดตฐานข้อมูลพร้อม path รูปใหม่
+                const sql = `UPDATE menu SET name = ?, thname = ?, price = ?, type = ?, img = ? WHERE menu_id = ?`;
+                db.run(sql, [name, thname, price, type, imgPath, menu_id], function (err) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตเมนู');
+                    }
+                    res.redirect('/admin');
+                });
+            });
+        } else {
+            // ถ้าไม่มีการอัปโหลดใหม่ ให้อัปเดตข้อมูลโดยใช้ path รูปเดิม
+            const sql = `UPDATE menu SET name = ?, thname = ?, price = ?, type = ?, img = ? WHERE menu_id = ?`;
+            db.run(sql, [name, thname, price, type, imgPath, menu_id], function (err) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตเมนู');
+                }
+                res.redirect('/admin');
+            });
+        }
     });
 });
 
@@ -118,6 +196,157 @@ app.post('/admin/menu/delete/:menu_id', isAdmin, (req, res) => {
             return res.status(500).send('เกิดข้อผิดพลาดในการลบเมนู');
         }
         res.redirect('/admin');
+    });
+});
+
+app.get('/admin/ingredients', isAdmin, (req, res) => {
+    const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+
+    if (isAdmin) {
+        db.all('SELECT * FROM ingredients ORDER BY type', (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('เกิดข้อผิดพลาด');
+            }
+            res.render('admin/ingredients', { isLoggedIn, isAdmin, ingredients: rows });
+        });
+    } else {
+        res.redirect('/login');
+    }
+});
+
+// หน้าเพิ่มเมนู
+app.get('/admin/ingredients/add', isAdmin, (req, res) => {
+    const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    res.render('admin/addingre', { isLoggedIn, isAdmin});
+});
+
+// เพิ่มเมนูในฐานข้อมูล
+app.post('/admin/ingredients/add', (req, res) => {
+    const { name, thname, price, type } = req.body;
+    
+    // ตรวจสอบค่าที่ได้รับจากฟอร์ม
+    if (!name || !thname || !price || !type) {
+        return res.status(400).send('กรุณากรอกข้อมูลให้ครบ');
+    }
+
+    let newImg = req.files?.img;
+    let imgPath = null; // ตั้งค่าเริ่มต้นเป็น null
+
+    if (newImg) {
+        imgPath = `/img/ingredients/${newImg.name}`;
+        const savePath = path.join(__dirname, 'public', imgPath);
+
+        if (!fs.existsSync(path.dirname(savePath))) {
+            return res.status(400).send('โฟลเดอร์ไม่ถูกต้อง');
+        }
+
+        newImg.mv(savePath, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+            }
+
+            db.run(
+                'INSERT INTO ingredients (name, thname, price, type, img) VALUES (?, ?, ?, ?, ?)',
+                [name, thname, price, type, imgPath],
+                (err) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มเมนู');
+                    }
+                    res.redirect('/admin/ingredients');
+                }
+            );
+        });
+    } else {
+        return res.status(400).send('กรุณาอัปโหลดรูปภาพ');
+    }
+});
+
+
+
+// หน้าแก้ไขเมนู
+app.get('/admin/ingredients/edit/:ingre_id', isAdmin, (req, res) => {
+    const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const { ingre_id } = req.params;
+    db.get('SELECT * FROM ingredients WHERE ingre_id = ?', [ingre_id], (err, row) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('เกิดข้อผิดพลาด');
+        }
+        res.render('admin/editingre', { isLoggedIn, isAdmin, ingredients: row });
+    });
+});
+
+// อัปเดตเมนูในฐานข้อมูล
+app.post('/admin/ingredients/edit/:ingre_id', isAdmin, (req, res) => {
+    const { menu_id } = req.params;
+    const { name, thname, price, type } = req.body;
+    let newImg = req.files?.img;
+
+    // ดึง path รูปเดิมจากฐานข้อมูล
+    db.get(`SELECT img FROM ingredients WHERE ingre_id = ?`, [ingre_id], (err, row) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('เกิดข้อผิดพลาดในการดึงข้อมูลเมนู');
+        }
+
+        let imgPath = row?.img || null; // ใช้ path เดิมถ้าไม่มีการอัปโหลดใหม่
+
+        if (newImg) {
+            // ใช้โฟลเดอร์ที่มีอยู่แล้ว: public/img/types/
+            imgPath = `/img/ingredients/${newImg.name}`;
+            const savePath = path.join(__dirname, 'public', imgPath);
+
+            // ตรวจสอบว่าโฟลเดอร์มีอยู่หรือไม่ แต่ **ไม่สร้างใหม่**
+            if (!fs.existsSync(path.dirname(savePath))) {
+                return res.status(400).send('โฟลเดอร์ไม่ถูกต้อง');
+            }
+
+            // ย้ายไฟล์ไปยังโฟลเดอร์
+            newImg.mv(savePath, (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send('เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+                }
+
+                // อัปเดตฐานข้อมูลพร้อม path รูปใหม่
+                const sql = `UPDATE ingredients SET name = ?, thname = ?, price = ?, type = ?, img = ? WHERE ingre_id = ?`;
+                db.run(sql, [name, thname, price, type, imgPath, ingre_id], function (err) {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตเมนู');
+                    }
+                    res.redirect('/admin/ingredients');
+                });
+            });
+        } else {
+            // ถ้าไม่มีการอัปโหลดใหม่ ให้อัปเดตข้อมูลโดยใช้ path รูปเดิม
+            const sql = `UPDATE ingredients SET name = ?, thname = ?, price = ?, type = ?, img = ? WHERE ingre_id = ?`;
+            db.run(sql, [name, thname, price, type, imgPath, ingre_id], function (err) {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตเมนู');
+                }
+                res.redirect('/admin/ingredients');
+            });
+        }
+    });
+});
+
+// ลบเมนู
+app.post('/admin/ingredients/delete/:ingre_id', isAdmin, (req, res) => {
+    const { menu_id } = req.params;
+    db.run('DELETE FROM ingredients WHERE ingre_id = ?', [menu_id], function(err) {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('เกิดข้อผิดพลาดในการลบเมนู');
+        }
+        res.redirect('/admin/ingredients');
     });
 });
 
