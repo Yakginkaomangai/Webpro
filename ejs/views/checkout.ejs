@@ -172,11 +172,30 @@
             border-radius: 8px;
         }
 
+        .add-to-cart {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 18px;
+            line-height: 20px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
         .btn-order:hover {
             background-color: #2E8B57;
         }
 
+        .delivery-option.btn-success {
+            color: white !important;
+        }
 
+        .schedule-option.btn-success {
+            color: white !important;
+        }
 
     </style>
 </head>
@@ -186,21 +205,23 @@
     <div class="container mb-5">
         <div class="row g-4">
             <div class="col-md-6">
-                <div class="card">
+                <div class="card" p-3>
                     <h4>Delivery Types</h4>
-                    <div class="mb-3">
-                        <button class="btn btn-success">🚀 30 Minutes Delivery</button>
-                        <button class="btn btn-outline-secondary">Pick Up</button>
+                    <div class="delivery-type" mb-3>
+                        <button class="btn btn-outline-secondary  delivery-option" data-type="delivery">🚀 30 Minutes Delivery</button>
+                        <button class="btn btn-outline-secondary delivery-option" data-type="pickup">📦 Pick Up</button>
                     </div>
-                    <input type="text" class="form-control" placeholder="Add Delivery Address">
+                    <input type="hidden" id="deliveryType" value="delivery">                    
+                    <input type="text" class="form-control mt-3" placeholder="Add Delivery Address">
                 </div>
                 <div class="card mt-3">
                     <h5>Schedule Delivery</h5>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-outline-secondary">10:00</button>
-                        <button class="btn btn-outline-secondary">12:00</button>
-                        <button class="btn btn-outline-secondary">14:00</button>
+                    <div class="schedule-delivery">
+                        <button class="btn btn-outline-secondary schedule-option" data-time="10:00">10:00</button>
+                        <button class="btn btn-outline-secondary schedule-option" data-time="12:00">12:00</button>
+                        <button class="btn btn-outline-secondary schedule-option" data-time="14:00">14:00</button>
                     </div>
+                    <input type="hidden" id="deliveryTime" value="10:00">                    
                 </div>
                 <div class="card mt-3">
                     <h5>Payment Method</h5>
@@ -225,6 +246,9 @@
                                     <div class="menu-item text-start mt-2 position-relative p-3" style="background-color: #fff; border-radius: 12px;">
                                         <img src="<%= item.img ? item.img : '/img/default.jpg' %>" class="img-fluid w-100 mt-2">
                                         <p><%= item.name %> - <%= item.price %> THB</p>
+                                        <button class="btn btn-success btn-sm add-to-cart" data-id="<%= item.menu_id %>" data-name="<%= item.name %>" data-price="<%= item.price %>" data-img="<%= item.img %>">
+                                            <strong>+</strong>
+                                        </button>
                                     </div>
                                 </div>
                             <% }) %>
@@ -239,7 +263,7 @@
                         <% cartItems.forEach(item => { %>
                             <div class="order-item">
                                 <img src="<%= item.img ? item.img : '/img/default.jpg' %>" alt="<%= item.name %>" style="width: 40px; height: 40px; border-radius: 8px;">
-                                <p><%= item.name %> - <%= item.price %> ฿</p>
+                                <p><%= item.name %> x<%= item.quantity %> (<%= item.price * item.quantity %> ฿)</p>
                             </div>
                         <% }) %>
                     <% } else { %>
@@ -255,13 +279,61 @@
                     <p>Subtotal: ฿<%= typeof subtotal !== 'undefined' ? subtotal : 0 %></p>
                     <p>Delivery Fee: Free</p>
                     <h5>Total: ฿<%= typeof total !== 'undefined' ? total : 0 %></h5>
-                    <button class="btn btn-order w-100">Order Now ฿<%= typeof total !== 'undefined' ? total : 0 %></button>
+                    <button id="orderNow" class="btn btn-success w-100">Order Now ฿<span id="totalAmount"></span></button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".add-to-cart").forEach(button => {
+                button.addEventListener("click", function () {
+                    let product_id = this.dataset.id;
+                    let name = this.dataset.name;
+                    let price = parseFloat(this.dataset.price);
+                    let img = this.dataset.img;
+
+                    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+                    let existingItem = cart.find(item => item.product_id === product_id);
+                    if (existingItem) {
+                        existingItem.quantity += 1;
+                    } else {
+                        cart.push({ product_id, name, price, img, quantity: 1 });
+                    }
+
+                    localStorage.setItem("cart", JSON.stringify(cart));
+                    alert(name + " ถูกเพิ่มลงในตะกร้า!");
+                });
+            });
+        });
+
+        
+        document.getElementById("orderNow").addEventListener("click", function () {
+            let user_id = localStorage.getItem("user_id"); // ดึง user_id จาก Session หรือ LocalStorage
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+            let total = document.getElementById("totalAmount").innerText;
+            let payment_method = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+            fetch("/order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id, items: cart, total, payment_method })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Order placed successfully! Redirecting...");
+                    window.location.href = `/receipt/${data.payment_id}`;
+                } else {
+                    alert("Order failed. Please try again.");
+                }
+            })
+            .catch(error => console.error("Order Error:", error));
+        });
+
+
         document.addEventListener("DOMContentLoaded", function () {
             let cart = JSON.parse(localStorage.getItem("cart")) || [];
             let cartContainer = document.getElementById("cart-items");
@@ -293,6 +365,93 @@
                 .catch(error => console.error("Error:", error));
             });
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // เลือกประเภทการส่ง
+            document.querySelectorAll(".delivery-option").forEach(button => {
+                button.addEventListener("click", function () {
+                    document.getElementById("deliveryType").value = this.dataset.type;
+
+                    // เปลี่ยนสไตล์ปุ่มที่เลือก
+                    document.querySelectorAll(".delivery-option").forEach(btn => btn.classList.remove("btn-success"));
+                    this.classList.add("btn-success");
+                });
+            });
+
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll(".add-to-cart").forEach(button => {
+                    button.addEventListener("click", function () {
+                        let user_id = localStorage.getItem("user_id") || 1; // กำหนด user_id (ต้องมี)
+                        let product_id = this.dataset.id;
+                        let name = this.dataset.name;
+                        let price = parseFloat(this.dataset.price);
+                        let img = this.dataset.img;
+
+                        // ตรวจสอบว่ามี user_id หรือไม่
+                        if (!user_id) {
+                            alert("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าในตะกร้า!");
+                            return;
+                        }
+
+                        // ส่งข้อมูลไปยังเซิร์ฟเวอร์
+                        fetch("/add-to-cart", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ user_id, product_id, name, price, img })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(name + " ถูกเพิ่มลงในตะกร้า! ✅");
+                            } else {
+                                alert("เกิดข้อผิดพลาด: ❌ " + data.error);
+                            }
+                        })
+                        .catch(error => console.error("Cart Error:", error));
+                    });
+                });
+            });
+
+
+
+            // เลือกเวลา
+            document.querySelectorAll(".schedule-option").forEach(button => {
+                button.addEventListener("click", function () {
+                    document.getElementById("deliveryTime").value = this.dataset.time;
+
+                    // เปลี่ยนสไตล์ปุ่มที่เลือก
+                    document.querySelectorAll(".schedule-option").forEach(btn => btn.classList.remove("btn-success"));
+                    this.classList.add("btn-success");
+                });
+            });
+        });
+
+        document.getElementById("orderNow").addEventListener("click", function () {
+            let user_id = localStorage.getItem("user_id");
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+            let total = document.getElementById("totalAmount").innerText;
+            let payment_method = document.querySelector('input[name="paymentMethod"]:checked').value;
+            let delivery_type = document.getElementById("deliveryType").value;
+            let delivery_time = document.getElementById("deliveryTime").value;
+
+            fetch("/order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id, items: cart, total, payment_method, delivery_type, delivery_time })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Order placed successfully! Redirecting...");
+                    window.location.href = `/receipt/${data.payment_id}`;
+                } else {
+                    alert("Order failed. Please try again.");
+                }
+            })
+            .catch(error => console.error("Order Error:", error));
+        });
+
+
     </script>
 
     <% include('partials/footer') %>
