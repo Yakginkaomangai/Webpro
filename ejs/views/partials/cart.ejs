@@ -3,9 +3,11 @@
         <h4>ตะกร้าสินค้า</h4>
         <p>สินค้าในตะกร้า...</p>
         <div class="cart-items"></div>
+        <hr>
+        <h5 class="text-end">รวมทั้งหมด: <span id="cart-total">0</span> THB</h5>
         <div class="cart-footer">
             <button class="btn btn-success w-100" onclick="checkout()">
-                <a href="/checkout" class="nav-link">ชำระเงิน</a>
+                <a href="/checkout" class="nav-link text-white">ชำระเงิน</a>
             </button>
         </div>
     </div>
@@ -17,19 +19,29 @@
         const data = await response.json();
         
         const cartBox = document.querySelector('.cart-items');
+        let totalPrice = 0;
+
         if (data.cart.length > 0) {
-            cartBox.innerHTML = data.cart.map(item => `
-                <div class="cart-item d-flex justify-content-between align-items-center p-2 border-bottom">
-                    <span>${item.product_name} x${item.quantity}</span>
-                    <div>
-                        <button class="btn btn-sm btn-danger" onclick="removeFromCart(${item.id})">ลบ</button>
+            cartBox.innerHTML = data.cart.map(item => {
+                let itemTotal = item.price * item.quantity;
+                totalPrice += itemTotal;
+
+                return `
+                    <div class="cart-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                        <span>${item.product_name} x${item.quantity} (${itemTotal} THB)</span>
+                        <div>
+                            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${item.id})">ลบ</button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         } else {
             cartBox.innerHTML = "<p class='text-muted'>ตะกร้าสินค้าว่างเปล่า</p>";
         }
+
+        document.getElementById('cart-total').textContent = totalPrice; // อัปเดตราคารวม
     }
+
     document.addEventListener('DOMContentLoaded', fetchCart);
 
     async function addToCart(productId, productName, price) {
