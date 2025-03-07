@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Drink</title>
-    
+    <title>Drinks</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
@@ -13,9 +13,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body class="d-flex flex-column min-vh-100">
-    
+
     <%- include('partials/navbar') %>
-    
+
     <div class="container mt-4 mb-5">
         <div class="container mt-4">
             <div class="row mt-3">
@@ -32,16 +32,19 @@
             <div class="col-md-9">
                 <h3>เครื่องดื่ม</h3>
                 <div class="row mt-3 mb-5">
-                    <% drinks.forEach(drinks => { %>
+                    <% drinks.forEach(drink => { %>
                         <div class="col-md-4">
-                            <div class="menu-item text-start mt-2"style="border: 2px solid #009444; padding: 20px; border-radius: 15px;">
-                                <img src="<%= drinks.img %>" class="img-fluid w-100" style="height: 180px; object-fit: cover;">
-                                <p class="text-success fw-bold small mt-4"><%= drinks.price %> THB</p>
-                                <p class="fw-bold"><%= drinks.name %></p> 
-                                <p class="fw-light"><%= drinks.thname %></p> 
+                            <div class="menu-item text-start mt-2" style="border: 2px solid #009444; padding: 20px; border-radius: 15px;">
+                                <img src="<%= drink.img %>" class="img-fluid w-100" style="height: 180px; object-fit: cover; border-radius: 15px;">
+                                <p class="text-success fw-bold small mt-4"><%= drink.price %> THB</p>
+                                <p class="fw-bold"><%= drink.name %></p> 
+                                <p class="fw-light"><%= drink.thname %></p> 
                                 <div class="hover-content">
                                     <input type="number" class="form-control qty-input" value="1" min="1">
-                                    <button class="btn btn-sm btn-success mt-2 w-100">เพิ่มลงตะกร้า</button>
+                                    <button class="btn btn-sm btn-success mt-2 w-100" 
+                                        onclick="addToCart('<%= drink.menu_id %>', '<%= drink.name %>', '<%= drink.price %>')">
+                                        เพิ่มลงตะกร้า
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -51,19 +54,7 @@
         </div>
     </div>
 
-    <div class="container mb-5">
-        <div class="cart-box">
-            <h4>ตะกร้าสินค้า</h4>
-            <p>สินค้าในตะกร้า...</p>
-            <div class="cart-footer">
-                <button class="btn btn-success w-100">
-                    <a href="/checkout" class="nav-link">ชำระเงิน</a>
-                </button>
-            </div>
-        </div>
-    </div>
-    
+    <%- include('partials/cart') %>
     <%- include('partials/footer') %>
-    
 </body>
 </html>

@@ -1,0 +1,68 @@
+<div class="container mb-5">
+    <div class="cart-box">
+        <h4>ตะกร้าสินค้า</h4>
+        <p>สินค้าในตะกร้า...</p>
+        <div class="cart-items"></div>
+        <div class="cart-footer">
+            <button class="btn btn-success w-100" onclick="checkout()">
+                <a href="/checkout" class="nav-link">ชำระเงิน</a>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function fetchCart() {
+        const response = await fetch('/cart/items');
+        const data = await response.json();
+        
+        const cartBox = document.querySelector('.cart-items');
+        if (data.cart.length > 0) {
+            cartBox.innerHTML = data.cart.map(item => `
+                <div class="cart-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                    <span>${item.product_name} x${item.quantity}</span>
+                    <div>
+                        <button class="btn btn-sm btn-danger" onclick="removeFromCart(${item.id})">ลบ</button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            cartBox.innerHTML = "<p class='text-muted'>ตะกร้าสินค้าว่างเปล่า</p>";
+        }
+    }
+    document.addEventListener('DOMContentLoaded', fetchCart);
+
+    async function addToCart(productId, productName, price) {
+        if (!productId || !productName || !price) {
+            alert("เกิดข้อผิดพลาด: ข้อมูลสินค้าไม่ถูกต้อง");
+            return;
+        }
+        const response = await fetch('/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId, product_name: productName, price: price })
+        });
+        const data = await response.json();
+        if (response.ok) {
+            alert('เพิ่มสินค้าเข้าตะกร้าสำเร็จ!');
+            fetchCart();
+        } else {
+            alert('เกิดข้อผิดพลาด: ' + data.error);
+        }
+    }
+
+    async function removeFromCart(cartId) {
+        const response = await fetch('/cart/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cart_id: cartId })
+        });
+        const data = await response.json();
+        if (response.ok) {
+            alert('ลบสินค้าเรียบร้อย');
+            fetchCart();
+        } else {
+            alert('เกิดข้อผิดพลาด: ' + data.error);
+        }
+    }
+</script>

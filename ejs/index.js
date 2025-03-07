@@ -145,38 +145,45 @@ app.get('/allsandwich', (req, res) => {
 
 app.get('/comboset', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT * FROM combo", (err, rows) => {
+    
+    db.all("SELECT combo_id, name, description, price, img FROM combo", (err, rows) => {
         if (err) {
-            console.error(err);
-            return res.status(500).send("Error fetching comboset data.");
+            console.error("Database error:", err);
+            return res.status(500).send("Error fetching combo set data.");
         }
-         // ส่งข้อมูลไปยังหน้า allsandwich
-         res.render('comboset', { 
+
+        console.log("Fetched combo sets:", rows); // ✅ Debug ข้อมูลที่ได้จาก DB
+
+        res.render('comboset', { 
             isLoggedIn,
-            comboset: rows.map(row => ({
+            combosets: rows.map(row => ({
+                menu_id: row.combo_id,  // ✅ เปลี่ยนจาก menu_id เป็น combo_id
                 name: row.name,
-                description: row.description,
+                thname: row.description, // ✅ ใช้ description เป็นรายละเอียดของคอมโบ้
                 price: row.price,
                 img: row.img
             }))
         });
     });
 });
+
+
 
 app.get('/appetizers', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-
-    // ดึงข้อมูลจากฐานข้อมูลที่ type = 'appetizer'
-    db.all("SELECT * FROM menu WHERE type = 'appetizer'", (err, rows) => {
+    
+    db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'appetizer'", (err, rows) => {
         if (err) {
-            console.error(err);
+            console.error("Database error:", err);
             return res.status(500).send("Error fetching appetizers data.");
         }
 
-        // ส่งข้อมูลไปยังหน้า appetizers
+        console.log("🍽️ Debug Appetizers:", rows); // ✅ ตรวจสอบค่าที่ดึงมา
+
         res.render('appetizers', { 
-            isLoggedIn, 
+            isLoggedIn,
             appetizers: rows.map(row => ({
+                menu_id: row.menu_id,  
                 name: row.name,
                 thname: row.thname,
                 price: row.price,
@@ -185,27 +192,22 @@ app.get('/appetizers', (req, res) => {
         });
     });
 });
+
 
 app.get('/drinks', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
-    db.all("SELECT * FROM menu WHERE type = 'drink'", (err, rows) => {
+    db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'drink'", (err, rows) => {
         if (err) {
-            console.error(err);
+            console.error("Database error:", err);
             return res.status(500).send("Error fetching drinks data.");
         }
-         // ส่งข้อมูลไปยังหน้า allsandwich
-         res.render('drinks', { 
+        console.log("Fetched drinks:", rows);
+        res.render('drinks', { 
             isLoggedIn,
-            drinks: rows.map(row => ({
-                name: row.name,
-                thname: row.thname,
-                price: row.price,
-                img: row.img
-            }))
+            drinks: rows
         });
     });
 });
-
 
 app.get('/custom', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
