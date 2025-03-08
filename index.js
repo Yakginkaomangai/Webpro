@@ -483,7 +483,7 @@ app.get('/allsandwich', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
     
-    db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'sandwich'", (err, rows) => {
+    db.all("SELECT * FROM menu WHERE type = 'sandwich'", (err, rows) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).send("Error fetching sandwiches data.");
@@ -494,13 +494,7 @@ app.get('/allsandwich', (req, res) => {
         res.render('allsandwich', { 
             isLoggedIn,
             isAdmin,
-            sandwiches: rows.map(row => ({
-                menu_id: row.menu_id,  // <- ตรวจสอบว่ามีค่าหรือไม่
-                name: row.name,
-                thname: row.thname,
-                price: row.price,
-                img: row.img
-            }))
+            sandwiches: rows
         });
     });
 });
@@ -510,7 +504,7 @@ app.get('/comboset', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
     
-    db.all("SELECT combo_id, name, description, price, img FROM combo", (err, rows) => {
+    db.all("SELECT * FROM menu WHERE type = 'combo'", (err, rows) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).send("Error fetching combo set data.");
@@ -521,13 +515,7 @@ app.get('/comboset', (req, res) => {
         res.render('comboset', { 
             isLoggedIn,
             isAdmin,
-            combosets: rows.map(row => ({
-                menu_id: row.combo_id,  // ✅ เปลี่ยนจาก menu_id เป็น combo_id
-                name: row.name,
-                thname: row.description, // ✅ ใช้ description เป็นรายละเอียดของคอมโบ้
-                price: row.price,
-                img: row.img
-            }))
+            combosets: rows
         });
     });
 });
@@ -538,7 +526,7 @@ app.get('/appetizers', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
     
-    db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'appetizer'", (err, rows) => {
+    db.all("SELECT * FROM menu WHERE type = 'appetizer'", (err, rows) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).send("Error fetching appetizers data.");
@@ -549,13 +537,7 @@ app.get('/appetizers', (req, res) => {
         res.render('appetizers', { 
             isLoggedIn,
             isAdmin,
-            appetizers: rows.map(row => ({
-                menu_id: row.menu_id,  
-                name: row.name,
-                thname: row.thname,
-                price: row.price,
-                img: row.img
-            }))
+            appetizers: rows
         });
     });
 });
@@ -564,7 +546,7 @@ app.get('/appetizers', (req, res) => {
 app.get('/drinks', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
-    db.all("SELECT menu_id, name, thname, price, img FROM menu WHERE type = 'drink'", (err, rows) => {
+    db.all("SELECT * FROM menu WHERE type = 'drink'", (err, rows) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).send("Error fetching drinks data.");
@@ -681,22 +663,29 @@ app.post('/cart/add', (req, res) => {
         return res.status(401).json({ error: 'กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้า' });
     }
 
-    const user_id = req.session.user.id; // ✅ ดึง user_id จาก session
-    const { product_id, product_name, price } = req.body;
+    const user_id = req.session.user.id; // ดึง user_id จาก session
+    const { product_id, product_name, price, quantity } = req.body; // รับ quantity จาก frontend
+
+    // ถ้า quantity ไม่ถูกต้อง ให้ return error
+    if (!quantity || quantity <= 0) {
+        return res.status(400).json({ error: 'จำนวนสินค้าต้องมากกว่า 0' });
+    }
 
     db.get(`SELECT * FROM cart WHERE user_id = ? AND product_id = ?`, [user_id, product_id], (err, row) => {
         if (err) return res.status(500).json({ error: err.message });
 
         if (row) {
-            db.run(`UPDATE cart SET quantity = quantity + 1 WHERE id = ?`, [row.id], function(err) {
+            // อัปเดต quantity ของสินค้าในตะกร้า
+            db.run(`UPDATE cart SET quantity = quantity + ? WHERE id = ?`, [quantity, row.id], function(err) {
                 if (err) return res.status(500).json({ error: err.message });
-                res.json({ message: 'เพิ่มจำนวนสินค้าในตะกร้าแล้ว' });
+                res.json({ message: `เพิ่ม ${product_name} ${quantity} ชิ้นในตะกร้าแล้ว` });
             });
         } else {
+            // เพิ่มสินค้าใหม่ลงในตะกร้า
             db.run(`INSERT INTO cart (user_id, product_id, product_name, price, quantity) VALUES (?, ?, ?, ?, ?)`, 
-                [user_id, product_id, product_name, price, 1], function(err) {
+                [user_id, product_id, product_name, price, quantity], function(err) {
                 if (err) return res.status(500).json({ error: err.message });
-                res.json({ message: 'เพิ่มสินค้าเข้าตะกร้าเรียบร้อย' });
+                res.json({ message: `เพิ่ม ${product_name} ${quantity} ชิ้นเข้าตะกร้าเรียบร้อย` });
             });
         }
     });
@@ -706,7 +695,7 @@ app.post('/cart/add', (req, res) => {
 
 // 🗑️ 2. ลบสินค้าออกจากตะกร้า
 app.post('/cart/remove', (req, res) => {
-    const { cart_id } = req.body;
+    const { cart_id } = req.body;  // รับ cart_id จาก body
     db.run(`DELETE FROM cart WHERE id = ?`, [cart_id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'ลบสินค้าออกจากตะกร้าสำเร็จ' });

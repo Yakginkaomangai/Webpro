@@ -40,7 +40,7 @@
                                 <p class="fw-bold"><%= drink.name %></p> 
                                 <p class="fw-light"><%= drink.thname %></p> 
                                 <div class="hover-content">
-                                    <input type="number" class="form-control qty-input" value="1" min="1">
+                                    <input type="number" class="form-control qty-input" data-product-id="<%= drink.menu_id %>" value="1" min="1">
                                     <button class="btn btn-sm btn-success mt-2 w-100" 
                                         onclick="addToCart('<%= drink.menu_id %>', '<%= drink.name %>', '<%= drink.price %>')">
                                         เพิ่มลงตะกร้า

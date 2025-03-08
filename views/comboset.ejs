@@ -38,9 +38,15 @@
                                 <img src="<%= comboset.img %>" class="img-fluid w-100" style="height: 180px; object-fit: cover; border-radius: 15px;">
                                 <p class="text-success fw-bold small mt-4"><%= comboset.price %> THB</p>
                                 <p class="fw-bold"><%= comboset.name %></p> 
-                                <p class="fw-light"><%= comboset.thname %></p> 
+                                <ul class="small text-muted">
+                                    <% comboset.description.split(', ').forEach(item => { %>
+                                        <li><%= item %></li>
+                                    <% }); %>
+                                </ul>
+                                
+                                
                                 <div class="hover-content">
-                                    <input type="number" class="form-control qty-input" value="1" min="1">
+                                    <input type="number" class="form-control qty-input" data-product-id="<%= comboset.menu_id %>" value="1" min="1">
                                     <button class="btn btn-sm btn-success mt-2 w-100" 
                                         onclick="addToCart('<%= comboset.menu_id %>', '<%= comboset.name %>', '<%= comboset.price %>')">
                                         เพิ่มลงตะกร้า

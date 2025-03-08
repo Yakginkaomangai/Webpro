@@ -7,7 +7,7 @@
         <h5 class="text-end">รวมทั้งหมด: <span id="cart-total">0</span> THB</h5>
         <div class="cart-footer">
             <button class="btn btn-success w-100" onclick="checkout()">
-                <a href="/checkout" class="nav-link text-white">ชำระเงิน</a>
+                <a href="/checkout" class="btn btn-success w-100 text-white text-center">ชำระเงิน</a>
             </button>
         </div>
     </div>
@@ -45,23 +45,35 @@
     document.addEventListener('DOMContentLoaded', fetchCart);
 
     async function addToCart(productId, productName, price) {
-        if (!productId || !productName || !price) {
-            alert("เกิดข้อผิดพลาด: ข้อมูลสินค้าไม่ถูกต้อง");
-            return;
-        }
-        const response = await fetch('/cart/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: productId, product_name: productName, price: price })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            alert('เพิ่มสินค้าเข้าตะกร้าสำเร็จ!');
-            fetchCart();
-        } else {
-            alert('เกิดข้อผิดพลาด: ' + data.error);
-        }
+    const qtyInput = document.querySelector(`input[data-product-id="${productId}"]`);
+    const quantity = qtyInput ? parseInt(qtyInput.value, 10) : 1;
+
+    if (!productId || !productName || !price || quantity <= 0) {
+        alert("เกิดข้อผิดพลาด: ข้อมูลสินค้าไม่ถูกต้อง");
+        return;
     }
+
+    const formData = new FormData();
+    formData.append("product_id", productId);
+    formData.append("product_name", productName);
+    formData.append("price", price);
+    formData.append("quantity", quantity);
+
+    const response = await fetch('/cart/add', {
+        method: 'POST',
+        body: formData
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+        alert(`เพิ่ม ${productName} ${quantity} ชิ้น เข้าตะกร้าสำเร็จ!`);
+        fetchCart();
+    } else {
+        alert('เกิดข้อผิดพลาด: ' + data.error);
+    }
+}
+
+    
 
     async function removeFromCart(cartId) {
         const response = await fetch('/cart/remove', {

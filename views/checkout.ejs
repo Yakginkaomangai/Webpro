@@ -22,7 +22,7 @@
         /* Navbar */
         .navbar {
             padding: 10px 0;
-            background-color: #FFFFFF !important; /* เปลี่ยนเป็นสีขาว */
+            background-color: #2E8B57 !important; /* เปลี่ยนเป็นสีขาว */
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
         }
 
@@ -37,7 +37,7 @@
         .navbar-nav .nav-link {
             font-weight: bold;
             transition: color 0.3s;
-            color: #333 !important; /* คืนค่าเป็นสีปกติ */
+            color: #ffffff !important; /* คืนค่าเป็นสีปกติ */
         }
 
         .navbar-nav .nav-link:hover {
@@ -262,9 +262,9 @@
                     <h4>Order Items (<%= cartItems ? cartItems.length : 0 %>)</h4>
                     <% if (cartItems.length > 0) { %>
                         <% cartItems.forEach(item => { %>
-                            <div class="order-item">
-                                <img src="<%= item.img ? item.img : '/img/default.jpg' %>" alt="<%= item.name %>" style="width: 40px; height: 40px; border-radius: 8px;">
-                                <p><%= item.name %> x<%= item.quantity %> (<%= item.price * item.quantity %> ฿)</p>
+                            <div class="order-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                                <span><%= item.product_name %> x <%= item.quantity %> (<%= item.price * item.quantity %> ฿)</span>
+                                <button class="btn btn-danger btn-sm remove-item" data-id="<%= item.id %>">ลบ</button>
                             </div>
                         <% }) %>
                     <% } else { %>
@@ -291,173 +291,161 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // ฟังก์ชันการเพิ่มสินค้าลงในตะกร้า
             document.querySelectorAll(".add-to-cart").forEach(button => {
                 button.addEventListener("click", function () {
                     let product_id = this.dataset.id;
                     let name = this.dataset.name;
                     let price = parseFloat(this.dataset.price);
                     let img = this.dataset.img;
-
-                    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-                    let existingItem = cart.find(item => item.product_id === product_id);
-                    if (existingItem) {
-                        existingItem.quantity += 1;
-                    } else {
-                        cart.push({ product_id, name, price, img, quantity: 1 });
-                    }
-
-                    localStorage.setItem("cart", JSON.stringify(cart));
-                    alert(name + " ถูกเพิ่มลงในตะกร้า!");
+                    let quantity = 1;
+        
+                    // เพิ่มสินค้าลงในตะกร้า
+                    fetch('/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id, product_name: name, price, quantity })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            alert(`${name} 1 ชิ้นถูกเพิ่มลงในตะกร้า!`);
+                            fetchCart(); // รีเฟรชข้อมูลตะกร้า
+                        } else {
+                            alert(`เกิดข้อผิดพลาด: ${data.error}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error adding to cart:", error);
+                        alert("เกิดข้อผิดพลาดในการเพิ่มสินค้า");
+                    });
                 });
             });
-        });
-
         
-        document.getElementById("orderNow").addEventListener("click", function () {
-            let user_id = localStorage.getItem("user_id"); // ดึง user_id จาก Session หรือ LocalStorage
-            let cart = JSON.parse(localStorage.getItem("cart")) || [];
-            let total = document.getElementById("totalAmount").innerText;
-            let payment_method = document.querySelector('input[name="paymentMethod"]:checked').value;
-
-            fetch("/order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id, items: cart, total, payment_method })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Order placed successfully! Redirecting...");
-                    window.location.href = `/receipt/${data.payment_id}`;
-                } else {
-                    alert("Order failed. Please try again.");
-                }
-            })
-            .catch(error => console.error("Order Error:", error));
-        });
-
-
-        document.addEventListener("DOMContentLoaded", function () {
-            let cart = JSON.parse(localStorage.getItem("cart")) || [];
-            let cartContainer = document.getElementById("cart-items");
-            let totalPrice = 0;
         
-            if (cart.length === 0) {
-                cartContainer.innerHTML = "<p>ไม่มีสินค้าในตะกร้า</p>";
-            } else {
-                cartContainer.innerHTML = cart.map(item => `
-                    <li>${item.name} x ${item.quantity} (${item.price * item.quantity} บาท)</li>
-                `).join("");
-                totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-            }
-        
-            document.getElementById("total-price").textContent = `ราคารวม: ${totalPrice} บาท`;
-        
-            document.getElementById("submitOrder").addEventListener("click", function () {
-                fetch("/submit-order", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ cart })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert("คำสั่งซื้อสำเร็จ! หมายเลขออเดอร์: " + data.orderId);
-                    localStorage.removeItem("cart"); // ล้างตะกร้าหลังจากสั่งสำเร็จ
-                    window.location.href = "/";
-                })
-                .catch(error => console.error("Error:", error));
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            // เลือกประเภทการส่ง
+            // ฟังก์ชันการเลือกประเภทการจัดส่ง
             document.querySelectorAll(".delivery-option").forEach(button => {
                 button.addEventListener("click", function () {
                     document.getElementById("deliveryType").value = this.dataset.type;
-
+        
                     // เปลี่ยนสไตล์ปุ่มที่เลือก
                     document.querySelectorAll(".delivery-option").forEach(btn => btn.classList.remove("btn-success"));
                     this.classList.add("btn-success");
                 });
             });
-
-            document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll(".add-to-cart").forEach(button => {
-                    button.addEventListener("click", function () {
-                        let user_id = localStorage.getItem("user_id") || 1; // กำหนด user_id (ต้องมี)
-                        let product_id = this.dataset.id;
-                        let name = this.dataset.name;
-                        let price = parseFloat(this.dataset.price);
-                        let img = this.dataset.img;
-
-                        // ตรวจสอบว่ามี user_id หรือไม่
-                        if (!user_id) {
-                            alert("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าในตะกร้า!");
-                            return;
-                        }
-
-                        // ส่งข้อมูลไปยังเซิร์ฟเวอร์
-                        fetch("/add-to-cart", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ user_id, product_id, name, price, img })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert(name + " ถูกเพิ่มลงในตะกร้า! ✅");
-                            } else {
-                                alert("เกิดข้อผิดพลาด: ❌ " + data.error);
-                            }
-                        })
-                        .catch(error => console.error("Cart Error:", error));
-                    });
-                });
-            });
-
-
-
-            // เลือกเวลา
+        
+            // ฟังก์ชันการเลือกเวลาจัดส่ง
             document.querySelectorAll(".schedule-option").forEach(button => {
                 button.addEventListener("click", function () {
                     document.getElementById("deliveryTime").value = this.dataset.time;
-
+        
                     // เปลี่ยนสไตล์ปุ่มที่เลือก
                     document.querySelectorAll(".schedule-option").forEach(btn => btn.classList.remove("btn-success"));
                     this.classList.add("btn-success");
                 });
             });
-        });
-
-        document.getElementById("orderNow").addEventListener("click", function () {
-            let user_id = localStorage.getItem("user_id");
-            let cart = JSON.parse(localStorage.getItem("cart")) || [];
-            let total = document.getElementById("totalAmount").innerText;
-            let payment_method = document.querySelector('input[name="paymentMethod"]:checked').value;
-            let delivery_type = document.getElementById("deliveryType").value;
-            let delivery_time = document.getElementById("deliveryTime").value;
-
-            fetch("/order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id, items: cart, total, payment_method, delivery_type, delivery_time })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Order placed successfully! Redirecting...");
-                    window.location.href = `/receipt/${data.payment_id}`;
-                } else {
-                    alert("Order failed. Please try again.");
+        
+            // การสั่งซื้อ
+            document.getElementById("orderNow").addEventListener("click", function () {
+                let user_id = localStorage.getItem("user_id");
+                if (!user_id) {
+                    alert("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ!");
+                    return;
                 }
-            })
-            .catch(error => console.error("Order Error:", error));
-        });
+        
+                let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                let total = document.getElementById("totalAmount").innerText;
+                let payment_method = document.querySelector('input[name="payment"]:checked').value;
+                let delivery_type = document.getElementById("deliveryType").value;
+                let delivery_time = document.getElementById("deliveryTime").value;
+        
+                fetch("/order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id, items: cart, total, payment_method, delivery_type, delivery_time })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Order placed successfully! Redirecting...");
+                        fetchCart();
+                        window.location.href = `/receipt/${data.payment_id}`;
+                    } else {
+                        alert("Order failed. Please try again.");
+                    }
+                })
+                .catch(error => console.error("Order Error:", error));
+            });
+        
+            // ฟังก์ชันการดึงข้อมูลตะกร้า
+            // ฟังก์ชันการดึงข้อมูลตะกร้า
+            async function fetchCart() {
+                const response = await fetch('/cart/items');
+                const data = await response.json();
+            
+                const cartBox = document.querySelector('.order-summary');
+                let totalPrice = 0;
+            
+                // เพิ่มส่วนหัวของตะกร้าสินค้า
+                cartBox.innerHTML = `<h4>Order Items (${data.cart.length})</h4>`;
+            
+                if (data.cart.length > 0) {
+                    // หากมีสินค้าในตะกร้า
+                    cartBox.innerHTML += data.cart.map(item => {
+                        let itemTotal = item.price * item.quantity;
+                        totalPrice += itemTotal;
+            
+                        return `
+                            <div class="order-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                                <span>${item.product_name} x ${item.quantity} (${itemTotal} ฿)</span>
+                                <button class="btn btn-danger btn-sm remove-item" data-id="${item.id}">ลบ</button>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    // หากตะกร้าสินค้าว่าง
+                    cartBox.innerHTML += "<p class='text-muted'>ตะกร้าสินค้าว่างเปล่า</p>";
+                }
+            
+                // อัปเดตราคารวม
+                document.getElementById('totalAmount').textContent = totalPrice;
+        
+                // เพิ่ม event listener ให้กับปุ่มลบสินค้า
+                document.querySelectorAll('.remove-item').forEach(button => {
+                    button.addEventListener('click', removeFromCart); // เรียกใช้ removeFromCart โดยตรง
+                });
+                location.reload();
+            }
 
+            document.querySelectorAll(".remove-item").forEach(button => {
+                button.addEventListener("click", function (event) {
+                    let product_id = event.target.dataset.id;  // ใช้ event.target แทน this
+                    console.log("Product ID:", product_id);  // ตรวจสอบค่าที่ถูกต้อง
+                    removeFromCart(product_id); 
+                });
+            });
+            
+            
 
+            // ฟังก์ชันการลบสินค้าจากตะกร้า
+            async function removeFromCart(cartId) {
+                console.log("Removing product ID:", cartId);  // ตรวจสอบค่าที่ส่งมาที่นี่
+                const response = await fetch('/cart/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cart_id: cartId })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('ลบสินค้าเรียบร้อย');
+                    fetchCart();
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + data.error);
+                }
+            }
+});
+        
     </script>
 
-    <% include('partials/footer') %>
 </body>
 </html> 
