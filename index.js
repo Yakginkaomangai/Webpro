@@ -6,7 +6,6 @@ const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const fileUpload = require('express-fileupload');
 
-const recommendedQuery = `SELECT * FROM menu ORDER BY COALESCE(popularity, 0) DESC LIMIT 3`;
 const app = express();
 const PORT = process.env.PORT || 3000;
 const sqlite3 = require('sqlite3').verbose();
@@ -284,7 +283,7 @@ app.get('/admin/ingredients/edit/:ingre_id', isAdmin, (req, res) => {
 
 // อัปเดตเมนูในฐานข้อมูล
 app.post('/admin/ingredients/edit/:ingre_id', isAdmin, (req, res) => {
-    const { menu_id } = req.params;
+    const { ingre_id } = req.params;
     const { name, thname, price, type } = req.body;
     let newImg = req.files?.img;
 
@@ -340,8 +339,8 @@ app.post('/admin/ingredients/edit/:ingre_id', isAdmin, (req, res) => {
 
 // ลบเมนู
 app.post('/admin/ingredients/delete/:ingre_id', isAdmin, (req, res) => {
-    const { menu_id } = req.params;
-    db.run('DELETE FROM ingredients WHERE ingre_id = ?', [menu_id], function(err) {
+    const { ingre_id } = req.params;
+    db.run('DELETE FROM ingredients WHERE ingre_id = ?', [ingre_id], function(err) {
         if (err) {
             console.error(err);
             return res.status(500).send('เกิดข้อผิดพลาดในการลบเมนู');
@@ -349,6 +348,113 @@ app.post('/admin/ingredients/delete/:ingre_id', isAdmin, (req, res) => {
         res.redirect('/admin/ingredients');
     });
 });
+
+app.get('/user', (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const user_id = req.session.user.user_id;
+    const isAdmin = req.session.user.role === 'admin';
+
+    db.get('SELECT * FROM users', [user_id], (err, user) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).send('เกิดข้อผิดพลาด');
+        }
+
+        if (!user) {
+            return res.status(404).send('ไม่พบข้อมูลผู้ใช้');
+        }
+
+        // ดึงข้อมูลคำสั่งซื้อของผู้ใช้
+        db.all('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [user_id], (err, orders) => {
+            if (err) {
+                console.error("Error fetching orders:", err);
+                return res.status(500).send('เกิดข้อผิดพลาดในการโหลดคำสั่งซื้อ');
+            }
+
+            res.render('user/profile', { isLoggedIn: true, isAdmin, users: user, orders });
+        });
+    });
+});
+
+app.get('/user/edit/:user_id', (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const isLoggedIn = true;
+    const isAdmin = req.session.user.role === 'admin';
+    const user_id = req.params.user_id;
+
+    db.get('SELECT * FROM users WHERE user_id = ?', [user_id], (err, row) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('เกิดข้อผิดพลาด');
+        }
+
+        if (!row) {
+            return res.status(404).send('ไม่พบข้อมูลผู้ใช้');
+        }
+
+        res.render('user/useredit', { isLoggedIn, isAdmin, users: row });
+    });
+});
+
+
+app.post('/user/useredit/:user_id', async (req, res) => {
+    const { first_name, last_name, dob, email, password, confirm_password, phone, gender} = req.body;
+    const user_id = req.params.user_id;
+
+    // Check if passwords match if they are provided
+    if (password && password !== confirm_password) {
+        return res.send("Error: Passwords do not match!");
+    }
+
+    // Log the user_id to ensure it's being passed correctly
+    console.log("User ID:", user_id);
+
+    // Fetch the current user data to get the existing password if needed
+    db.get('SELECT password FROM users WHERE user_id = ?', [user_id], async (err, row) => {
+        if (err) {
+            console.error("Database Error:", err);  // Log detailed database error
+            return res.status(500).send('เกิดข้อผิดพลาดในการค้นหาข้อมูลผู้ใช้');
+        }
+
+        if (!row) {
+            console.error("User not found for user_id:", user_id);  // Log if user is not found
+            return res.status(404).send('ไม่พบผู้ใช้ในระบบ');
+        }
+
+        // Use existing password if no new password is provided
+        let hashedPassword;
+        if (password) {
+            hashedPassword = await bcrypt.hash(password, 10);  // Hash new password
+        } else {
+            hashedPassword = row.password;  // Use the existing password from the database
+        }
+
+        // Prepare the SQL query to update the user data
+        const sql = `UPDATE users SET first_name = ?, last_name = ?, dob = ?, email = ?, password = ?, phone = ?, gender = ? WHERE user_id = ?`;
+
+        console.log("SQL Query:", sql);
+        console.log("Parameters:", [first_name, last_name, dob, email, hashedPassword, phone, gender, user_id]);
+
+        // Execute the query to update user data
+        db.run(sql, [first_name, last_name, dob, email, hashedPassword, phone, gender, user_id], function (err) {
+            if (err) {
+                console.error("Error while updating user data:", err);  // Log the error message
+                return res.status(500).send('เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
+            }
+            res.redirect('/user');
+        });
+    });
+});
+
+
+
+
 
 // Routes
 app.get('/', (req, res) => {
@@ -621,41 +727,6 @@ app.get('/custom', (req, res) => {
         });
     });
 });
-
-// เส้นทางสำหรับแสดงหน้าข้อมูลผู้ใช้
-app.get('/user', (req, res) => {
-    // ตัวอย่างข้อมูลที่สามารถส่งไปแสดงในหน้า HTML
-    const isLoggedIn = req.session && req.session.user ? true : false;
-    const isAdmin = req.session.user && req.session.user.role === 'admin';
-    const user = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        phone: '123-456-7890',
-        gender: 'ชาย',
-        birthDate: '1990-01-01',
-    };
-
-    const orders = [
-        {
-            id: 12345,
-            status: 'จัดส่งแล้ว',
-            orderDate: '2023-10-01',
-            deliveryDate: '2023-10-05',
-        },
-        {
-            id: 67890,
-            status: 'กำลังดำเนินการ',
-            orderDate: '2023-10-10',
-            deliveryDate: '-',
-        },
-    ];
-
-    // Render หน้า user-detail.ejs พร้อมส่งข้อมูล
-    res.render('user', { isLoggedIn, isAdmin, user, orders });
-});
-
-app.use(express.json()); // รองรับ JSON ในการรับ-ส่งข้อมูล
 
 // 🛒 1. เพิ่มสินค้าเข้าตะกร้า
 app.post('/cart/add', (req, res) => {
