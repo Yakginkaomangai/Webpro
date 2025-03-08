@@ -56,17 +56,17 @@
                         <h2 class="mb-4">คำสั่งซื้อของคุณ</h2>
                         <% if (orders && orders.length > 0) { %>
                             <ul class="list-group">
-                                <% orders.forEach(orders => { %>
+                                <% orders.forEach(order => { %>
                                     <li class="list-group-item">
-                                        <strong>หมายเลขคำสั่งซื้อ:</strong> <%= orders.order_id %><br>
-                                        <strong>วันที่:</strong> <%= orders.created_at %><br>
+                                        <strong>หมายเลขคำสั่งซื้อ:</strong> <%= order.order_id %><br>
+                                        <strong>วันที่:</strong> <%= new Date(order.created_at).toLocaleDateString() %><br>
                                         <strong>สถานะ:</strong> 
                                         <span class="badge bg-<%= order.status === 'สำเร็จ' ? 'success' : 'warning' %>">
-                                            <%= orders.status %>
+                                            <%= order.status %>
                                         </span>
                                         <br>
                                     </li>
-                                <% }); %>
+                                    <% }); %>
                             </ul>
                         <% } else { %>
                             <p class="text-muted">คุณยังไม่มีคำสั่งซื้อ</p>

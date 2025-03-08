@@ -354,15 +354,15 @@ app.get('/user', (req, res) => {
         return res.redirect('/login');
     }
 
-    const user_id = req.session.user.user_id;
+    const user_id = req.session.user.id;
     const isAdmin = req.session.user.role === 'admin';
 
-    db.get('SELECT * FROM users', [user_id], (err, user) => {
+    db.get('SELECT * FROM users WHERE user_id = ?', [user_id], (err, user) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).send('เกิดข้อผิดพลาด');
         }
-
+    
         if (!user) {
             return res.status(404).send('ไม่พบข้อมูลผู้ใช้');
         }
@@ -373,9 +373,11 @@ app.get('/user', (req, res) => {
                 console.error("Error fetching orders:", err);
                 return res.status(500).send('เกิดข้อผิดพลาดในการโหลดคำสั่งซื้อ');
             }
-
+        
+            console.log('Orders fetched:', orders);  // Log the orders result
+            
             res.render('user/profile', { isLoggedIn: true, isAdmin, users: user, orders });
-        });
+        });    
     });
 });
 
