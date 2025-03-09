@@ -72,5 +72,44 @@
     </div>
 
     <%- include('partials/footer') %>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loginForm = document.querySelector("form[action='/login']");
+    
+            if (loginForm) {
+                loginForm.addEventListener("submit", async function (event) {
+                    event.preventDefault();
+    
+                    const formData = new FormData(loginForm);
+                    const response = await fetch("/login", {
+                        method: "POST",
+                        body: formData
+                    });
+    
+                    // ✅ ตรวจสอบ response type
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("Server did not return JSON");
+                    }
+    
+                    const data = await response.json();
+    
+                    if (data.success) {
+                        // ✅ เซ็ต user_id และข้อมูล user ใน LocalStorage
+                        localStorage.setItem("user_id", data.user.id);
+                        localStorage.setItem("user", JSON.stringify(data.user));
+    
+                        window.location.href = "/";
+                    } else {
+                        alert("Login failed: " + data.message);
+                    }
+                });
+            }
+        });
+    </script>
+        
+    
+    
 </body>
 </html>

@@ -479,27 +479,31 @@ app.post('/login', (req, res) => {
 
     const sql = "SELECT * FROM Users WHERE email = ?";
     db.get(sql, [email], async (err, user) => {
-        if (err) return res.send('เกิดข้อผิดพลาด: ' + err.message);
-        if (!user) return res.redirect('/login?error=1'); // ถ้าไม่มี user
+        if (err) return res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด: " + err.message });
+        if (!user) return res.status(401).json({ success: false, message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.redirect('/login?error=1');
+        if (!isMatch) return res.status(401).json({ success: false, message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
 
         req.session.user = {
             id: user.user_id,
             email: user.email,
-            name: user.name,
+            name: user.first_name,
             role: user.role
         }; // เก็บข้อมูลผู้ใช้ใน session
 
-
-         // ✅ บันทึก Session ก่อน Redirect
         req.session.save(err => {
-            if (err) return res.send('Error saving session: ' + err.message);
-            res.redirect('/'); // กลับไปหน้า Home
-        }); 
+            if (err) return res.status(500).json({ success: false, message: "Error saving session: " + err.message });
+
+            // ✅ ส่ง response เป็น JSON (ลบ res.redirect('/'))
+            res.json({
+                success: true,
+                user: { id: user.user_id, email: user.email, name: user.first_name }
+            });
+        });
     });
 });
+
 
 // Logout
 app.get('/logout', (req, res) => {
@@ -819,6 +823,7 @@ app.post('/submit-order', (req, res) => {
     }
 
     let orderId = Date.now();
+    
     let query = "INSERT INTO orders (order_id, item_name, quantity, price) VALUES (?, ?, ?, ?)";
     
     let stmt = db.prepare(query);
@@ -829,6 +834,70 @@ app.post('/submit-order', (req, res) => {
 
     res.json({ orderId });
 });
+
+// ✅ API /order
+app.post("/order", async (req, res) => {
+    const { user_id, payment_method, delivery_type, delivery_time } = req.body;
+
+    console.log("📦 Processing Order for user_id:", user_id);
+
+    if (!user_id) {
+        return res.status(400).json({ success: false, message: "ข้อมูลไม่ครบถ้วน" });
+    }
+
+    try {
+        // ✅ ดึงข้อมูลจากตะกร้า
+        const cartItems = await new Promise((resolve, reject) => {
+            db.all("SELECT * FROM cart WHERE user_id = ?", [user_id], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+
+        if (!cartItems || cartItems.length === 0) {
+            return res.status(400).json({ success: false, message: "ตะกร้าสินค้าว่างเปล่า!" });
+        }
+
+        // ✅ คำนวณราคารวม
+        let total_price = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        // ✅ บันทึกคำสั่งซื้อใน `orders`
+        const orderQuery = `INSERT INTO orders (user_id, total_price, payment_method, delivery_type, delivery_time, status, created_at, updated_at) 
+                            VALUES (?, ?, ?, ?, ?, 'รอดำเนินการ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`;
+
+        db.run(orderQuery, [user_id, total_price, payment_method, delivery_type, delivery_time], function (err) {
+            if (err) {
+                console.error("❌ Error placing order:", err);
+                return res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการสั่งซื้อ" });
+            }
+
+            const order_id = this.lastID;
+            console.log("✅ Order Created: ", order_id);
+
+            // ✅ บันทึกรายการสินค้าลง `order_items`
+            cartItems.forEach(item => {
+                const itemQuery = `INSERT INTO order_items (order_id, product_id, name, quantity, price) VALUES (?, ?, ?, ?, ?)`;
+                const params = [order_id, item.product_id, item.product_name, item.quantity, item.price];
+
+                db.run(itemQuery, params, function (err) {
+                    if (err) console.error("❌ Error adding order item:", err);
+                });
+            });
+
+            // ✅ ล้างตะกร้าหลังจากสั่งซื้อเสร็จ
+            db.run("DELETE FROM cart WHERE user_id = ?", [user_id], function (err) {
+                if (err) console.error("❌ Error clearing cart:", err);
+            });
+
+            res.json({ success: true, order_id });
+        });
+    } catch (error) {
+        console.error("❌ Order Error:", error);
+        res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการสั่งซื้อ" });
+    }
+});
+
+
 
 // เริ่มเซิร์ฟเวอร์
 app.listen(PORT, () => {

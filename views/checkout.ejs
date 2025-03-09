@@ -277,9 +277,9 @@
                         <input type="text" class="form-control" placeholder="Enter Promo Code">
                         <button class="btn btn-outline-success mt-2">Apply</button>
                     </div>
-                    <p>Subtotal: ฿<%= typeof subtotal !== 'undefined' ? subtotal : 0 %></p>
-                    <p>Delivery Fee: Free</p>
-                    <h5>Total: ฿<%= typeof total !== 'undefined' ? total : 0 %></h5>
+                        <p>Subtotal: ฿<%= typeof subtotal !== 'undefined' ? subtotal : 0 %></p>
+                        <p>Delivery Fee: Free</p>
+                        <h5><span id="totalAmount">Total: ฿<%= typeof total !== 'undefined' ? total : 0 %></span></h5>
                     <button id="orderNow" class="btn btn-success w-100">Order Now ฿<span id="totalAmount"></span></button>
                 </div>
             </div>
@@ -290,8 +290,17 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // ฟังก์ชันการเพิ่มสินค้าลงในตะกร้า
+        document.addEventListener("DOMContentLoaded", async function () {
+            let totalElement = document.getElementById("totalAmount");
+
+            if (!totalElement) {
+                alert("ไม่พบองค์ประกอบ Total Amount ในหน้าเว็บ!");
+                return;
+            }
+
+            let total_price = parseFloat(totalElement.textContent.trim()) || 0;
+            console.log("📦 Total Price ที่ดึงมาได้:", total_price);
+
             document.querySelectorAll(".add-to-cart").forEach(button => {
                 button.addEventListener("click", function () {
                     let product_id = this.dataset.id;
@@ -299,6 +308,8 @@
                     let price = parseFloat(this.dataset.price);
                     let img = this.dataset.img;
                     let quantity = 1;
+
+
         
                     // เพิ่มสินค้าลงในตะกร้า
                     fetch('/cart/add', {
@@ -321,8 +332,6 @@
                     });
                 });
             });
-        
-        
             // ฟังก์ชันการเลือกประเภทการจัดส่ง
             document.querySelectorAll(".delivery-option").forEach(button => {
                 button.addEventListener("click", function () {
@@ -344,40 +353,55 @@
                     this.classList.add("btn-success");
                 });
             });
-        
-            // การสั่งซื้อ
-            document.getElementById("orderNow").addEventListener("click", function () {
-                let user_id = localStorage.getItem("user_id");
-                if (!user_id) {
-                    alert("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ!");
-                    return;
-                }
-        
-                let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                let total = document.getElementById("totalAmount").innerText;
-                let payment_method = document.querySelector('input[name="payment"]:checked').value;
-                let delivery_type = document.getElementById("deliveryType").value;
-                let delivery_time = document.getElementById("deliveryTime").value;
-        
-                fetch("/order", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id, items: cart, total, payment_method, delivery_type, delivery_time })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Order placed successfully! Redirecting...");
-                        fetchCart();
-                        window.location.href = `/receipt/${data.payment_id}`;
-                    } else {
-                        alert("Order failed. Please try again.");
-                    }
-                })
-                .catch(error => console.error("Order Error:", error));
-            });
-        
-            // ฟังก์ชันการดึงข้อมูลตะกร้า
+            document.getElementById("orderNow").addEventListener("click", async function () {
+    let user_id = localStorage.getItem("user_id");
+
+    if (!user_id) {
+        alert("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ!");
+        return;
+    }
+
+    // ✅ ดึงค่ารวมจาก Total Amount
+    let totalElement = document.getElementById("totalAmount");
+    console.log("📌 totalElement:", totalElement); // ดูว่าเจอ element หรือไม่
+    if (!totalElement) {
+    alert("ไม่พบองค์ประกอบ Total Amount ในหน้าเว็บ!");
+} else {
+    let total_price = parseFloat(totalElement.textContent.trim()) || 0;
+    console.log("📦 Total Price ที่ดึงมาได้:", total_price);
+}
+    let payment_method = document.querySelector('input[name="payment"]:checked')?.value || "เงินสด";
+    let delivery_type = document.getElementById("deliveryType").value;
+    let delivery_time = document.getElementById("deliveryTime").value;
+
+    console.log("📦 ค่าที่จะส่งไป API:", { user_id, total_price, payment_method, delivery_type, delivery_time });
+
+    try {
+        let response = await fetch("http://localhost:3000/order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id, total_price, payment_method, delivery_type, delivery_time })
+        });
+
+        if (!response.ok) throw new Error("Server Error");
+
+        let data = await response.json();
+
+        if (data.success) {
+            alert("✅ Order placed successfully!");
+            //สั่ง order เสร็จไปหน้า home
+            window.location.href = `/`;
+        } else {
+            alert("❌ Order failed: " + data.message);
+        }
+    } catch (error) {
+        console.error("❌ Order Error:", error);
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์!");
+    }
+});
+
+        });
+    
             // ฟังก์ชันการดึงข้อมูลตะกร้า
             async function fetchCart() {
                 const response = await fetch('/cart/items');
@@ -443,7 +467,8 @@
                     alert('เกิดข้อผิดพลาด: ' + data.error);
                 }
             }
-});
+
+
         
     </script>
 
