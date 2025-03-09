@@ -207,39 +207,59 @@
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="card" p-3>
-                    <h4>Delivery Types</h4>
+                    <h4>การจัดส่ง</h4>
                     <div class="delivery-type" mb-3>
-                        <button class="btn btn-outline-secondary  delivery-option" data-type="delivery">🚀 30 Minutes Delivery</button>
-                        <button class="btn btn-outline-secondary delivery-option" data-type="pickup">📦 Pick Up</button>
+                        <button class="btn btn-outline-secondary delivery-option" data-type="จัดส่ง" >🚀 จัดส่งภายใน 30 นาที</button>
+                        <button class="btn btn-outline-secondary delivery-option" data-type="รับที่ร้าน" >📦 รับที่ร้าน</button>
                     </div>
-                    <input type="hidden" id="deliveryType" value="delivery">                    
-                    <input type="text" class="form-control mt-3" placeholder="Add Delivery Address">
+                    <input type="hidden" id="deliveryType" name="delivery_type" value="จัดส่ง">                    
+                    <input type="text" style="display: none;" id="deliveryAddress" class="form-control mt-3" placeholder="เพิ่มที่อยู่จัดส่ง">
+                </div>
+                <div class="card mt-3" id="pickupTimeSection" style="display: none;">
+                    <h5>เลือกเวลารับที่ร้าน</h5>
+                    <div class="mb-3">
+                        <select class="form-select" id="deliveryTime" name="delivery_time">
+                            <option value="" selected disabled>-- เลือกเวลา --</option>
+                            <option value="10:00">10:00</option>
+                            <option value="10:00">10:30</option>
+                            <option value="11:00">11:00</option>
+                            <option value="10:00">11:30</option>
+                            <option value="12:00">12:00</option>
+                            <option value="10:00">12:30</option>
+                            <option value="13:00">13:00</option>
+                            <option value="10:00">13:30</option>
+                            <option value="14:00">14:00</option>
+                            <option value="10:00">14:30</option>
+                            <option value="15:00">15:00</option>
+                            <option value="10:00">15:30</option>
+                            <option value="16:00">16:00</option>
+                            <option value="10:00">16:30</option>
+                            <option value="17:00">17:00</option>
+                            <option value="10:00">17:30</option>
+                            <option value="18:00">18:00</option>
+                            <option value="10:00">18:30</option>
+                            <option value="19:00">19:00</option>
+                            <option value="10:00">19:30</option>
+                            <option value="20:00">20:00</option>
+                        </select>
+                    </div>                  
                 </div>
                 <div class="card mt-3">
-                    <h5>Schedule Delivery</h5>
-                    <div class="schedule-delivery">
-                        <button class="btn btn-outline-secondary schedule-option" data-time="10:00">10:00</button>
-                        <button class="btn btn-outline-secondary schedule-option" data-time="12:00">12:00</button>
-                        <button class="btn btn-outline-secondary schedule-option" data-time="14:00">14:00</button>
-                    </div>
-                    <input type="hidden" id="deliveryTime" value="10:00">                    
-                </div>
-                <div class="card mt-3">
-                    <h5>Payment Method</h5>
+                    <h5>วิธีชำระเงิน</h5>
                     <div class="mb-2">
-                        <input type="radio" name="payment" checked> 💵 Cash
+                        <input type="radio" name="payment_method" value="เงินสด" checked> 💵 Cash (เงินสด)
                     </div>
                     <div class="mb-2">
-                        <input type="radio" name="payment"> 💳 Credit/Debit Card
+                        <input type="radio" name="payment_method" value="บัตรเครดิต/เดบิต"> 💳 Credit/Debit Card (บัตรเครดิต/เดบิต)
                     </div>
                     <div class="mb-2">
-                        <input type="radio" name="payment"> 📱 Mobile Banking
+                        <input type="radio" name="payment_method" value="โอนผ่านบัญชีธนาคาร"> 📱 Mobile Banking (โอนผ่านบัญชีธนาคาร)
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="card">
-                    <h4>Recommended Menu</h4>
+                    <h4>เมนูแนะนำ</h4>
                     <div class="row mt-3 mb-5">
                         <% if (recommendedMenu && recommendedMenu.length > 0) { %>
                             <% recommendedMenu.forEach(item => { %>
@@ -254,12 +274,12 @@
                                 </div>
                             <% }) %>
                         <% } else { %>
-                            <p>No recommended menu available</p>
+                            <p>ไม่มีเมนูแนะนำ</p>
                         <% } %>                        
                     </div>
                 </div>
                 <div class="card mt-3 order-summary p-3">
-                    <h4>Order Items (<%= cartItems ? cartItems.length : 0 %>)</h4>
+                    <h4>รายการสินค้า (<%= cartItems ? cartItems.length : 0 %>)</h4>
                     <% if (cartItems.length > 0) { %>
                         <% cartItems.forEach(item => { %>
                             <div class="order-item d-flex justify-content-between align-items-center p-2 border-bottom">
@@ -272,15 +292,15 @@
                     <% } %>                    
                 </div>
                 <div class="card mt-3">
-                    <h4>Discounts & Order Summary</h4>
+                    <h4>ส่วนลด & สรุปคำสั่งซื้อ</h4>
                     <div class="mb-2">
-                        <input type="text" class="form-control" placeholder="Enter Promo Code">
-                        <button class="btn btn-outline-success mt-2">Apply</button>
+                        <input type="text" class="form-control" placeholder="กรอกส่วนลด">
+                        <button class="btn btn-outline-success mt-2">ยีนยัน</button>
                     </div>
-                        <p>Subtotal: ฿<%= typeof subtotal !== 'undefined' ? subtotal : 0 %></p>
-                        <p>Delivery Fee: Free</p>
+                        <p id="subtotalAmount">Subtotal: ฿<%= typeof subtotal !== 'undefined' ? subtotal : 0 %></p>
+                        <p>ค่าจัดส่ง: ฟรี</p>
                         <h5><span id="totalAmount">Total: ฿<%= typeof total !== 'undefined' ? total : 0 %></span></h5>
-                    <button id="orderNow" class="btn btn-success w-100">Order Now ฿<span id="totalAmount"></span></button>
+                    <button id="orderNow" class="btn btn-success w-100">ยืนยันคำสั่งซื้อ<span id="totalAmount"></span></button>
                 </div>
             </div>
         </div>
@@ -291,134 +311,173 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
-            let totalElement = document.getElementById("totalAmount");
-
+            const totalElement = document.getElementById("totalAmount");
+            const orderNowButton = document.getElementById("orderNow");
+        
             if (!totalElement) {
                 alert("ไม่พบองค์ประกอบ Total Amount ในหน้าเว็บ!");
                 return;
             }
-
+        
             let total_price = parseFloat(totalElement.textContent.trim()) || 0;
             console.log("📦 Total Price ที่ดึงมาได้:", total_price);
-
+        
+            // ✅ เพิ่มสินค้าลงในตะกร้า
             document.querySelectorAll(".add-to-cart").forEach(button => {
-                button.addEventListener("click", function () {
+                button.addEventListener("click", async function () {
                     let product_id = this.dataset.id;
                     let name = this.dataset.name;
                     let price = parseFloat(this.dataset.price);
-                    let img = this.dataset.img;
                     let quantity = 1;
-
-
         
-                    // เพิ่มสินค้าลงในตะกร้า
-                    fetch('/cart/add', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ product_id, product_name: name, price, quantity })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
+                    try {
+                        let response = await fetch('/cart/add', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ product_id, product_name: name, price, quantity })
+                        });
+        
+                        let data = await response.json();
+        
                         if (data.message) {
                             alert(`${name} 1 ชิ้นถูกเพิ่มลงในตะกร้า!`);
-                            fetchCart(); // รีเฟรชข้อมูลตะกร้า
+                            await fetchCart(); // รีเฟรชข้อมูลตะกร้า
                         } else {
                             alert(`เกิดข้อผิดพลาด: ${data.error}`);
                         }
-                    })
-                    .catch(error => {
-                        console.error("Error adding to cart:", error);
+                    } catch (error) {
+                        console.error("❌ Error adding to cart:", error);
                         alert("เกิดข้อผิดพลาดในการเพิ่มสินค้า");
-                    });
+                    }
                 });
             });
-            // ฟังก์ชันการเลือกประเภทการจัดส่ง
+        
+            // ✅ ฟังก์ชันเลือกประเภทการจัดส่ง
             document.querySelectorAll(".delivery-option").forEach(button => {
                 button.addEventListener("click", function () {
                     document.getElementById("deliveryType").value = this.dataset.type;
         
-                    // เปลี่ยนสไตล์ปุ่มที่เลือก
                     document.querySelectorAll(".delivery-option").forEach(btn => btn.classList.remove("btn-success"));
                     this.classList.add("btn-success");
+                    updateDeliveryUI(this.dataset.type);
                 });
             });
         
-            // ฟังก์ชันการเลือกเวลาจัดส่ง
+            // ✅ ฟังก์ชันเลือกเวลาจัดส่ง
             document.querySelectorAll(".schedule-option").forEach(button => {
                 button.addEventListener("click", function () {
                     document.getElementById("deliveryTime").value = this.dataset.time;
         
-                    // เปลี่ยนสไตล์ปุ่มที่เลือก
                     document.querySelectorAll(".schedule-option").forEach(btn => btn.classList.remove("btn-success"));
                     this.classList.add("btn-success");
                 });
             });
-            document.getElementById("orderNow").addEventListener("click", async function () {
-    let user_id = localStorage.getItem("user_id");
 
-    if (!user_id) {
-        alert("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ!");
-        return;
-    }
+            function updateDeliveryUI(delivery_type) {
+                const deliveryAddressInput = document.getElementById("deliveryAddress");
+                const pickupTimeSection = document.getElementById("pickupTimeSection");
+                const deliveryTime = document.getElementById("deliveryTime");
+            
+                // ถ้าหากเลือกจัดส่ง ให้แสดงช่องกรอกที่อยู่และทำให้เป็นฟิลด์บังคับ
+                if (delivery_type === "จัดส่ง") {
+                    deliveryAddressInput.style.display = "block";
+                    deliveryAddressInput.required = true;  // กำหนดให้ที่อยู่เป็นฟิลด์บังคับ
+                    pickupTimeSection.style.display = "none"; // ซ่อนเวลารับที่ร้าน
+                } else {
+                    deliveryAddressInput.style.display = "none"; // ซ่อนช่องที่อยู่
+                    deliveryAddressInput.required = false;  // ไม่บังคับกรอกที่อยู่
+                    deliveryTime.required = true;
+                    pickupTimeSection.style.display = "block"; // แสดงเวลารับที่ร้าน
+                }
+            }
+        
+            // ✅ ฟังก์ชันสั่งซื้อ
+            orderNowButton.addEventListener("click", async function () {
+                if (orderNowButton.disabled) return; // ป้องกันการกดซ้ำ
+                orderNowButton.disabled = true;
+        
+                let user_id = localStorage.getItem("user_id");
+        
+                if (!user_id) {
+                    alert("กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ!");
+                    orderNowButton.disabled = false;
+                    return;
+                }
+        
+                let totalElement = document.getElementById("totalAmount");
+                if (!totalElement || totalElement.textContent.trim() === "") {
+                    alert("ไม่พบหรือไม่สามารถดึงยอดรวมได้!");
+                    orderNowButton.disabled = false;
+                    return;
+                }
+                let total_price = parseFloat(totalElement.textContent.trim());
 
-    // ✅ ดึงค่ารวมจาก Total Amount
-    let totalElement = document.getElementById("totalAmount");
-    console.log("📌 totalElement:", totalElement); // ดูว่าเจอ element หรือไม่
-    if (!totalElement) {
-    alert("ไม่พบองค์ประกอบ Total Amount ในหน้าเว็บ!");
-} else {
-    let total_price = parseFloat(totalElement.textContent.trim()) || 0;
-    console.log("📦 Total Price ที่ดึงมาได้:", total_price);
-}
-    let payment_method = document.querySelector('input[name="payment"]:checked')?.value || "เงินสด";
-    let delivery_type = document.getElementById("deliveryType").value;
-    let delivery_time = document.getElementById("deliveryTime").value;
 
-    console.log("📦 ค่าที่จะส่งไป API:", { user_id, total_price, payment_method, delivery_type, delivery_time });
+        
+                let payment_method = document.querySelector('input[name="payment_method"]:checked')?.value;
+                let delivery_type = document.getElementById("deliveryType").value;
+                let delivery_time = document.getElementById("deliveryTime").value;
+                let address = document.getElementById("deliveryAddress").value.trim();
 
-    try {
-        let response = await fetch("http://localhost:3000/order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id, total_price, payment_method, delivery_type, delivery_time })
-        });
-
-        if (!response.ok) throw new Error("Server Error");
-
-        let data = await response.json();
-
-        if (data.success) {
-            alert("✅ Order placed successfully!");
-            //สั่ง order เสร็จไปหน้า home
-            window.location.href = `/`;
-        } else {
-            alert("❌ Order failed: " + data.message);
-        }
-    } catch (error) {
-        console.error("❌ Order Error:", error);
-        alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์!");
-    }
-});
-
-        });
-    
-            // ฟังก์ชันการดึงข้อมูลตะกร้า
+                if (!delivery_type) {
+                    alert("กรุณาเลือกการจัดส่ง!");
+                    orderNowButton.disabled = false;
+                    return;
+                }
+        
+                if (delivery_type === "delivery" && !address) {
+                    alert("กรุณากรอกที่อยู่สำหรับจัดส่ง!");
+                    orderNowButton.disabled = false;
+                    return;
+                }
+                if (delivery_type === "pickup" && !delivery_time) {
+                    alert("กรุณาเลือกเวลารับที่ร้าน!");
+                    orderNowButton.disabled = false;
+                    return;
+                }
+        
+                console.log("📦 ค่าที่จะส่งไป API:", { user_id, total_price, payment_method, delivery_type, delivery_time, address });
+        
+                try {
+                    let response = await fetch("http://localhost:3000/order", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user_id, total_price, payment_method, delivery_type, delivery_time, address })
+                    });
+        
+                    let data = await response.json();
+        
+                    if (data.success) {
+                        alert("✅ สั่งซื้อสำเร็จ!");
+                        window.location.href = `/`;
+                    } else {
+                        alert("❌ สั่งซื้อไม่สำเร็จ: " + data.message);
+                    }
+                } catch (error) {
+                    console.error("❌ Order Error:", error);
+                    alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์!");
+                } finally {
+                    orderNowButton.disabled = false;
+                }
+            });
+        
+            // ✅ ฟังก์ชันการดึงข้อมูลตะกร้า
             async function fetchCart() {
                 const response = await fetch('/cart/items');
                 const data = await response.json();
-            
+        
                 const cartBox = document.querySelector('.order-summary');
                 let totalPrice = 0;
-            
-                // เพิ่มส่วนหัวของตะกร้าสินค้า
-                cartBox.innerHTML = `<h4>Order Items (${data.cart.length})</h4>`;
-            
+                let subtotal = 0;
+        
+                cartBox.innerHTML = `<h4>รายการสินค้า (${data.cart.length})</h4>`;
+        
                 if (data.cart.length > 0) {
-                    // หากมีสินค้าในตะกร้า
                     cartBox.innerHTML += data.cart.map(item => {
                         let itemTotal = item.price * item.quantity;
                         totalPrice += itemTotal;
-            
+                        subtotal += item.price * item.quantity;
+        
                         return `
                             <div class="order-item d-flex justify-content-between align-items-center p-2 border-bottom">
                                 <span>${item.product_name} x ${item.quantity} (${itemTotal} ฿)</span>
@@ -427,49 +486,50 @@
                         `;
                     }).join('');
                 } else {
-                    // หากตะกร้าสินค้าว่าง
                     cartBox.innerHTML += "<p class='text-muted'>ตะกร้าสินค้าว่างเปล่า</p>";
                 }
-            
-                // อัปเดตราคารวม
-                document.getElementById('totalAmount').textContent = totalPrice;
         
-                // เพิ่ม event listener ให้กับปุ่มลบสินค้า
+                document.getElementById('totalAmount').textContent = `Total: ${totalPrice} THB`;
+                document.getElementById('subtotalAmount').textContent = `Subtotal: ${subtotal}฿`;
+        
+                // ✅ แนบ event ให้ปุ่มลบสินค้าใหม่
                 document.querySelectorAll('.remove-item').forEach(button => {
-                    button.addEventListener('click', removeFromCart); // เรียกใช้ removeFromCart โดยตรง
+                    button.addEventListener('click', function () {
+                        let product_id = this.dataset.id;
+                        removeFromCart(product_id);
+                    });
                 });
-                location.reload();
             }
-
-            document.querySelectorAll(".remove-item").forEach(button => {
-                button.addEventListener("click", function (event) {
-                    let product_id = event.target.dataset.id;  // ใช้ event.target แทน this
-                    console.log("Product ID:", product_id);  // ตรวจสอบค่าที่ถูกต้อง
-                    removeFromCart(product_id); 
-                });
-            });
-            
-            
-
-            // ฟังก์ชันการลบสินค้าจากตะกร้า
+        
+            // ✅ ฟังก์ชันการลบสินค้าจากตะกร้า
             async function removeFromCart(cartId) {
-                console.log("Removing product ID:", cartId);  // ตรวจสอบค่าที่ส่งมาที่นี่
-                const response = await fetch('/cart/remove', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ cart_id: cartId })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    alert('ลบสินค้าเรียบร้อย');
-                    fetchCart();
-                } else {
-                    alert('เกิดข้อผิดพลาด: ' + data.error);
+                console.log("Removing product ID:", cartId);
+        
+                try {
+                    let response = await fetch('/cart/remove', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ cart_id: cartId })
+                    });
+        
+                    let data = await response.json();
+        
+                    if (response.ok) {
+                        alert('ลบสินค้าเรียบร้อย');
+                        await fetchCart(); // ดึงข้อมูลตะกร้าใหม่
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + data.error);
+                    }
+                } catch (error) {
+                    console.error("❌ Error removing from cart:", error);
+                    alert("เกิดข้อผิดพลาดในการลบสินค้า");
                 }
             }
-
-
         
+            // ✅ โหลดตะกร้าเมื่อเปิดหน้าเว็บ
+            await fetchCart();
+        });
+           
     </script>
 
 </body>

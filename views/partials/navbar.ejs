@@ -10,8 +10,9 @@
             <ul class="navbar-nav ms-auto">
                 <% if (isLoggedIn && isAdmin) { %>
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin" style="background-color: #1fbff4; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; margin-right: 15px; font-size:small;">จัดการระะบบ</a>
+                        <a class="nav-link" href="/logout" style="background-color: #d9534f; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; font-size:small;">ออกจากระบบ</a>
                     </li>
+                <% } else if (isLoggedIn && isManager) { %>
                     <li class="nav-item">
                         <a class="nav-link" href="/logout" style="background-color: #d9534f; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; font-size:small;">ออกจากระบบ</a>
                     </li>
@@ -22,14 +23,15 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/logout" style="background-color: #d9534f; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; font-size:small;">ออกจากระบบ</a>
                     </li>
+                    <li class="nav-item"><a class="nav-link" href="/checkout">🛒</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">🌐 TH</a></li>
                 <% } else { %>
                     <li class="nav-item">
                         <a class="nav-link" href="/login" style="background-color: #f3a954; border-radius: 8px; color:#ffffff; padding-left: 20px; padding-right: 20px; font-size:small;">เข้าสู่ระบบ / สมัครสมาชิก</a>
                     </li>
+                    <li class="nav-item"><a class="nav-link" href="/checkout">🛒</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">🌐 TH</a></li>
                 <% } %>
-                
-                <li class="nav-item"><a class="nav-link" href="/checkout">🛒</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">🌐 TH</a></li>
             </ul>
         </div>
     </div>

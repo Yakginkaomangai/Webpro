@@ -12,9 +12,10 @@
     <%- include('../partials/navbar') %>
     
     <div class="container my-5">
+        <a href="/user" class="btn btn-danger mb-3">ย้อนกลับ</a>
         <div class="card shadow-sm">
             <div class="card-header text-center text-black">
-                <h3>User Edit</h3>
+                <h2>User Edit</h2>
             </div>
             <div class="card-body">
                 <form action="/user/useredit/<%= users.user_id %>" method="POST" enctype="multipart/form-data">
@@ -63,12 +64,12 @@
                     <!-- Password Fields -->
                     <div class="mb-3">
                         <label class="form-label">รหัสผ่านใหม่ (หากต้องการเปลี่ยน)</label>
-                        <input type="password" class="form-control" name="password" required>
+                        <input type="password" class="form-control" name="password">
                     </div>
         
                     <div class="mb-3">
                         <label class="form-label">ยืนยันรหัสผ่าน *</label>
-                        <input type="password" class="form-control" name="confirm_password" required>
+                        <input type="password" class="form-control" name="confirm_password">
                     </div>
         
                     <button type="submit" class="btn btn-success w-100 mt-3">แก้ไขข้อมูล</button>

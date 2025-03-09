@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Orders</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+    
+    <div class="container mt-5">
+        <h2>คำสั่งซื้อทั้งหมด</h2>
+        <div class="list-group">
+            <% orders.forEach(order => { %>
+                <div class="list-group-item">
+                    <strong>หมายเลขคำสั่งซื้อ:</strong> <%= order.order_id %><br>
+                    <strong>ชื่อลูกค้า:</strong> <%= order.customer_name %><br>
+                    <strong>วันที่:</strong> <%= new Date(order.created_at).toLocaleDateString() %><br>
+                    <strong>ราคารวม:</strong> <%= order.total_price.toFixed(2) %> บาท<br>
+                    <strong>สถานะ:</strong> 
+                    <span class="badge bg-<%= 
+                    order.status === 'สำเร็จ' ? 'success' : 
+                    order.status === 'รอดำเนินการ' ? 'warning' : 
+                    order.status === 'กำลังจัดส่ง' ? 'primary' : 
+                    order.status === 'ยกเลิก' ? 'danger' : 'secondary' %>">
+                    <%= order.status %>
+                    </span>
+
+                    <div class="mt-2 d-flex justify-content-between">
+                        <!-- ฟอร์มอัพเดทสถานะ -->
+                        <form action="/order/update-status/<%= order.order_id %>" method="POST">
+                            <div class="d-flex">
+                                <select name="status" class="form-control me-2">
+                                    <option value="รอดำเนินการ" <%= order.status === 'รอดำเนินการ' ? 'selected' : '' %>>รอดำเนินการ</option>
+                                    <option value="กำลังจัดส่ง" <%= order.status === 'กำลังจัดส่ง' ? 'selected' : '' %>>กำลังจัดส่ง</option>
+                                    <option value="สำเร็จ" <%= order.status === 'สำเร็จ' ? 'selected' : '' %>>สำเร็จ</option>
+                                    <option value="ยกเลิก" <%= order.status === 'ยกเลิก' ? 'selected' : '' %>>ยกเลิก</option>
+                                </select>
+                                <button type="submit" class="btn btn-success">อัพเดท</button>
+                            </div>
+                        </form>
+                
+                        <!-- ฟอร์มยกเลิกคำสั่งซื้อ -->
+                        <form action="/order/cancel/<%= order.order_id %>" method="POST">
+                            <button type="submit" class="btn btn-danger">ลบคำสั่งซื้อ</button>
+                        </form>
+                    </div>
+                </div>
+                
+            <% }); %>
+        </div>
+        
+    </div>
+    <%- include('../partials/footer') %>
+</body>
+</html>

@@ -46,6 +46,14 @@ function isAdmin(req, res, next) {
     }
 }
 
+function isManager(req, res, next) {
+    if (req.session.user && req.session.user.role === 'manager') {
+        return next(); // ถ้าเป็น manager ให้ดำเนินการต่อ
+    } else {
+        return res.status(403).send('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+    }
+}
+
 // หน้า Admin Dashboard
 app.get('/admin', isAdmin, (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
@@ -356,6 +364,7 @@ app.get('/user', (req, res) => {
 
     const user_id = req.session.user.id;
     const isAdmin = req.session.user.role === 'admin';
+    const isManager = req.session.user.role === 'manager';
 
     db.get('SELECT * FROM users WHERE user_id = ?', [user_id], (err, user) => {
         if (err) {
@@ -376,7 +385,7 @@ app.get('/user', (req, res) => {
         
             console.log('Orders fetched:', orders);  // Log the orders result
             
-            res.render('user/profile', { isLoggedIn: true, isAdmin, users: user, orders });
+            res.render('user/profile', { isLoggedIn: true, isAdmin, isManager, users: user, orders });
         });    
     });
 });
@@ -388,6 +397,7 @@ app.get('/user/edit/:user_id', (req, res) => {
 
     const isLoggedIn = true;
     const isAdmin = req.session.user.role === 'admin';
+    const isManager = req.session.user.role === 'manager';
     const user_id = req.params.user_id;
 
     db.get('SELECT * FROM users WHERE user_id = ?', [user_id], (err, row) => {
@@ -400,7 +410,7 @@ app.get('/user/edit/:user_id', (req, res) => {
             return res.status(404).send('ไม่พบข้อมูลผู้ใช้');
         }
 
-        res.render('user/useredit', { isLoggedIn, isAdmin, users: row });
+        res.render('user/useredit', { isLoggedIn, isAdmin, isManager, users: row });
     });
 });
 
@@ -455,6 +465,61 @@ app.post('/user/useredit/:user_id', async (req, res) => {
 });
 
 
+app.get('/manager/orders', isManager, (req, res) => {
+    const isLoggedIn = req.session && req.session.user ? true : false;
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const isManager = req.session.user && req.session.user.role === 'manager';
+
+    const query = `
+        SELECT orders.order_id, orders.created_at, orders.status, orders.total_price, 
+               users.first_name AS customer_name
+        FROM orders
+        JOIN users ON orders.user_id = users.user_id
+        ORDER BY orders.created_at DESC
+    `;
+
+    db.all(query, [], (err, orders) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error retrieving orders');
+        }
+        res.render('manager/orders', { isLoggedIn, isManager, isAdmin, orders: orders });
+    });
+});
+
+// เส้นทางสำหรับอัปเดตสถานะคำสั่งซื้อ
+app.post('/order/update-status/:order_id', isManager, (req, res) => {
+    const { status } = req.body;
+    const { order_id } = req.params;
+
+    console.log("Updating order:", order_id, "to status:", status); // Debugging
+
+    if (!status) {
+        return res.status(400).send('Missing status');
+    }
+
+    // อัปเดตสถานะและเวลา update_at
+    db.run('UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE order_id = ?', [status, order_id], (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error updating order status');
+        }
+        res.redirect('/manager/orders');
+    });
+});
+
+
+app.post('/order/cancel/:order_id', isManager, (req, res) => {
+    const { order_id } = req.params;
+
+    db.run('DELETE FROM orders WHERE order_id = ?', [order_id], (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error canceling order');
+        }
+        res.redirect('/manager/orders');
+    });
+});
 
 
 
@@ -462,7 +527,16 @@ app.post('/user/useredit/:user_id', async (req, res) => {
 app.get('/', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
-    res.render('home', {isLoggedIn, isAdmin})
+    const isManager = req.session.user && req.session.user.role === 'manager';
+
+    if (isLoggedIn && isManager) {
+        return res.redirect('/manager/orders'); // ถ้าเป็น Manager ให้รีไดเรกต์ไปหน้า /manager/orders
+    }
+    if (isLoggedIn && isAdmin) {
+        return res.redirect('/admin');
+    }
+
+    res.render('home', { isLoggedIn ,isAdmin, isManager});
 });
 
 // หน้า Login (เช็ค error message)
@@ -549,7 +623,8 @@ app.get('/checkout', (req, res) => {
 
             res.render('checkout', {
                 isLoggedIn: req.session.user ? true : false,
-                isAdmin: req.session.user ? req.session.user.role === 'admin' : false,
+                isAdmin : req.session.user && req.session.user.role === 'admin',
+                isManager : req.session.user && req.session.user.role === 'manager',
                 recommendedMenu: recommendedMenu,
                 cartItems: cartItems || [], // ถ้าไม่มีให้ใช้ array ว่าง
                 subtotal: cartItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0),
@@ -594,6 +669,7 @@ app.post('/register', async (req, res) => {
 app.get('/allsandwich', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const isManager = req.session.user && req.session.user.role === 'manager';
     
     db.all("SELECT * FROM menu WHERE type = 'sandwich'", (err, rows) => {
         if (err) {
@@ -605,7 +681,8 @@ app.get('/allsandwich', (req, res) => {
 
         res.render('allsandwich', { 
             isLoggedIn,
-            isAdmin,
+            isAdmin, 
+            isManager,
             sandwiches: rows
         });
     });
@@ -615,6 +692,7 @@ app.get('/allsandwich', (req, res) => {
 app.get('/comboset', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const isManager = req.session.user && req.session.user.role === 'manager';
     
     db.all("SELECT * FROM menu WHERE type = 'combo'", (err, rows) => {
         if (err) {
@@ -626,7 +704,8 @@ app.get('/comboset', (req, res) => {
 
         res.render('comboset', { 
             isLoggedIn,
-            isAdmin,
+            isAdmin, 
+            isManager,
             combosets: rows
         });
     });
@@ -637,6 +716,7 @@ app.get('/comboset', (req, res) => {
 app.get('/appetizers', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const isManager = req.session.user && req.session.user.role === 'manager';
     
     db.all("SELECT * FROM menu WHERE type = 'appetizer'", (err, rows) => {
         if (err) {
@@ -648,7 +728,8 @@ app.get('/appetizers', (req, res) => {
 
         res.render('appetizers', { 
             isLoggedIn,
-            isAdmin,
+            isAdmin, 
+            isManager,
             appetizers: rows
         });
     });
@@ -658,6 +739,7 @@ app.get('/appetizers', (req, res) => {
 app.get('/drinks', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const isManager = req.session.user && req.session.user.role === 'manager';
     db.all("SELECT * FROM menu WHERE type = 'drink'", (err, rows) => {
         if (err) {
             console.error("Database error:", err);
@@ -666,7 +748,8 @@ app.get('/drinks', (req, res) => {
         console.log("Fetched drinks:", rows);
         res.render('drinks', { 
             isLoggedIn,
-            isAdmin,
+            isAdmin, 
+            isManager,
             drinks: rows
         });
     });
@@ -675,6 +758,7 @@ app.get('/drinks', (req, res) => {
 app.get('/custom', (req, res) => {
     const isLoggedIn = req.session && req.session.user ? true : false;
     const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const isManager = req.session.user && req.session.user.role === 'manager';
     const breads = "SELECT thname, price, img FROM ingredients WHERE type = 'Bread'"
     const meats = "SELECT thname, price, img FROM ingredients WHERE type = 'Meat'"
     const vegetables = "SELECT thname, price, img FROM ingredients WHERE type = 'Vegetables'"
@@ -706,7 +790,8 @@ app.get('/custom', (req, res) => {
                         // ส่งข้อมูลไปยัง view
                         res.render('custom', { 
                             isLoggedIn,
-                            isAdmin,
+                            isAdmin, 
+                            isManager,
                             breads: breads.map(row => ({
                                 name: row.thname,
                                 price: row.price,
@@ -837,12 +922,21 @@ app.post('/submit-order', (req, res) => {
 
 // ✅ API /order
 app.post("/order", async (req, res) => {
-    const { user_id, payment_method, delivery_type, delivery_time } = req.body;
+    const { user_id, payment_method, delivery_type, delivery_time, address } = req.body;
 
     console.log("📦 Processing Order for user_id:", user_id);
 
-    if (!user_id) {
+    // ✅ ตรวจสอบข้อมูลที่จำเป็น
+    if (!user_id || !payment_method || !delivery_type) {
         return res.status(400).json({ success: false, message: "ข้อมูลไม่ครบถ้วน" });
+    }
+    
+    if (delivery_type === "จัดส่ง" && !address) {
+        return res.status(400).json({ success: false, message: "กรุณากรอกที่อยู่สำหรับการจัดส่ง" });
+    }
+
+    if (delivery_type === "รับที่ร้าน" && !delivery_time) {
+        return res.status(400).json({ success: false, message: "กรุณาเลือกเวลารับที่ร้าน" });
     }
 
     try {
@@ -861,41 +955,56 @@ app.post("/order", async (req, res) => {
         // ✅ คำนวณราคารวม
         let total_price = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-        // ✅ บันทึกคำสั่งซื้อใน `orders`
-        const orderQuery = `INSERT INTO orders (user_id, total_price, payment_method, delivery_type, delivery_time, status, created_at, updated_at) 
-                            VALUES (?, ?, ?, ?, ?, 'รอดำเนินการ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`;
+        db.serialize(() => {
+            // ✅ บันทึกคำสั่งซื้อใน `orders`
+            const orderQuery = `
+                INSERT INTO orders (user_id, total_price, payment_method, delivery_type, delivery_time, address, status, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, 'รอดำเนินการ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`;
 
-        db.run(orderQuery, [user_id, total_price, payment_method, delivery_type, delivery_time], function (err) {
-            if (err) {
-                console.error("❌ Error placing order:", err);
-                return res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการสั่งซื้อ" });
-            }
+            db.run(orderQuery, [user_id, total_price, payment_method, delivery_type, delivery_time || null, address || null], function (err) {
+                if (err) {
+                    console.error("❌ Error placing order:", err);
+                    return res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการสั่งซื้อ" });
+                }
 
-            const order_id = this.lastID;
-            console.log("✅ Order Created: ", order_id);
+                const order_id = this.lastID;
+                console.log("✅ Order Created:", order_id);
 
-            // ✅ บันทึกรายการสินค้าลง `order_items`
-            cartItems.forEach(item => {
-                const itemQuery = `INSERT INTO order_items (order_id, product_id, name, quantity, price) VALUES (?, ?, ?, ?, ?)`;
-                const params = [order_id, item.product_id, item.product_name, item.quantity, item.price];
+                // ✅ บันทึกรายการสินค้าลง `order_items`
+                let insertPromises = cartItems.map(item => {
+                    return new Promise((resolve, reject) => {
+                        const itemQuery = `INSERT INTO order_items (order_id, product_id, name, quantity, price) VALUES (?, ?, ?, ?, ?)`;
+                        db.run(itemQuery, [order_id, item.product_id, item.product_name, item.quantity, item.price], function (err) {
+                            if (err) {
+                                console.error("❌ Error adding order item:", err);
+                                reject(err);
+                            } else {
+                                resolve();
+                            }
+                        });
+                    });
+                });
 
-                db.run(itemQuery, params, function (err) {
-                    if (err) console.error("❌ Error adding order item:", err);
+                // ✅ ล้างตะกร้าหลังจากสั่งซื้อเสร็จ
+                Promise.all(insertPromises).then(() => {
+                    db.run("DELETE FROM cart WHERE user_id = ?", [user_id], function (err) {
+                        if (err) console.error("❌ Error clearing cart:", err);
+                    });
+
+                    res.json({ success: true, order_id });
+                }).catch(error => {
+                    console.error("❌ Error processing order items:", error);
+                    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการบันทึกรายการสินค้า" });
                 });
             });
-
-            // ✅ ล้างตะกร้าหลังจากสั่งซื้อเสร็จ
-            db.run("DELETE FROM cart WHERE user_id = ?", [user_id], function (err) {
-                if (err) console.error("❌ Error clearing cart:", err);
-            });
-
-            res.json({ success: true, order_id });
         });
+
     } catch (error) {
         console.error("❌ Order Error:", error);
         res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการสั่งซื้อ" });
     }
 });
+
 
 
 
