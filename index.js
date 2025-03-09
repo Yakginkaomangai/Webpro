@@ -375,18 +375,54 @@ app.get('/user', (req, res) => {
         if (!user) {
             return res.status(404).send('ไม่พบข้อมูลผู้ใช้');
         }
+        
+        
+            // ดึงข้อมูลคำสั่งซื้อของผู้ใช้
+            const query = `
+            SELECT o.order_id, o.created_at, o.total_price, o.status, oi.name, oi.quantity, oi.price
+            FROM orders o
+            JOIN order_items oi ON o.order_id = oi.order_id
+            WHERE o.user_id = ?
+            ORDER BY o.created_at DESC
+        `;
 
-        // ดึงข้อมูลคำสั่งซื้อของผู้ใช้
-        db.all('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC', [user_id], (err, orders) => {
+        db.all(query, [user_id], (err, orders) => {
             if (err) {
                 console.error("Error fetching orders:", err);
                 return res.status(500).send('เกิดข้อผิดพลาดในการโหลดคำสั่งซื้อ');
             }
+
+            // รวมข้อมูลของ order_items สำหรับแต่ละ order_id
+            const ordersWithItems = orders.reduce((acc, order) => {
+                const existingOrder = acc.find(o => o.order_id === order.order_id);
+                
+                if (existingOrder) {
+                    existingOrder.items.push({
+                        name: order.name,
+                        quantity: order.quantity,
+                        price: order.price
+                    });
+                    existingOrder.totalPrice += order.quantity * order.price; // อัปเดตราคาสุทธิ
+                } else {
+                    acc.push({
+                        order_id: order.order_id,
+                        created_at: order.created_at,
+                        status: order.status,
+                        items: [{
+                            name: order.name,
+                            quantity: order.quantity,
+                            price: order.price
+                        }],
+                        totalPrice: order.quantity * order.price
+                    });
+                }
+
+                return acc;
+            }, []);
+
+            res.render('user/profile', { isLoggedIn: true, isAdmin, isManager, users: user, orders: ordersWithItems });
+        });
         
-            console.log('Orders fetched:', orders);  // Log the orders result
-            
-            res.render('user/profile', { isLoggedIn: true, isAdmin, isManager, users: user, orders });
-        });    
     });
 });
 
@@ -472,9 +508,10 @@ app.get('/manager/orders', isManager, (req, res) => {
 
     const query = `
         SELECT orders.order_id, orders.created_at, orders.status, orders.total_price, 
-               users.first_name AS customer_name
+               users.first_name AS customer_name, oi.name AS product_name, oi.quantity, oi.price
         FROM orders
         JOIN users ON orders.user_id = users.user_id
+        JOIN order_items oi ON orders.order_id = oi.order_id
         ORDER BY orders.created_at DESC
     `;
 
@@ -483,9 +520,40 @@ app.get('/manager/orders', isManager, (req, res) => {
             console.error(err);
             return res.status(500).send('Error retrieving orders');
         }
-        res.render('manager/orders', { isLoggedIn, isManager, isAdmin, orders: orders });
+
+        // รวมข้อมูลของ order_items สำหรับแต่ละ order_id
+        const ordersWithItems = orders.reduce((acc, order) => {
+            const existingOrder = acc.find(o => o.order_id === order.order_id);
+            
+            if (existingOrder) {
+                existingOrder.items.push({
+                    product_name: order.product_name,
+                    quantity: order.quantity,
+                    price: order.price
+                });
+                existingOrder.totalPrice += order.quantity * order.price; // อัปเดตราคาสุทธิ
+            } else {
+                acc.push({
+                    order_id: order.order_id,
+                    created_at: order.created_at,
+                    status: order.status,
+                    customer_name: order.customer_name,
+                    items: [{
+                        product_name: order.product_name,
+                        quantity: order.quantity,
+                        price: order.price
+                    }],
+                    totalPrice: order.quantity * order.price
+                });
+            }
+
+            return acc;
+        }, []);
+
+        res.render('manager/orders', { isLoggedIn, isManager, isAdmin, orders: ordersWithItems });
     });
 });
+
 
 // เส้นทางสำหรับอัปเดตสถานะคำสั่งซื้อ
 app.post('/order/update-status/:order_id', isManager, (req, res) => {
@@ -512,14 +580,26 @@ app.post('/order/update-status/:order_id', isManager, (req, res) => {
 app.post('/order/cancel/:order_id', isManager, (req, res) => {
     const { order_id } = req.params;
 
+    // ลบจาก orders
     db.run('DELETE FROM orders WHERE order_id = ?', [order_id], (err) => {
         if (err) {
-            console.error(err);
-            return res.status(500).send('Error canceling order');
+            console.error('Error deleting from orders:', err);
+            return res.status(500).send('Error deleting order');
         }
-        res.redirect('/manager/orders');
+
+        // ลบจาก order_items
+        db.run('DELETE FROM order_items WHERE order_id = ?', [order_id], (err) => {
+            if (err) {
+                console.error('Error deleting from order_items:', err);
+                return res.status(500).send('Error deleting order items');
+            }
+
+            // รีไดเร็กต์ไปที่หน้าคำสั่งซื้อหลังจากลบเสร็จ
+            res.redirect('/manager/orders');
+        });
     });
 });
+
 
 
 

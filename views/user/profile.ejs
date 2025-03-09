@@ -58,29 +58,36 @@
                     <div class="bg-white p-4 rounded shadow">
                         <h2 class="mb-4">คำสั่งซื้อของคุณ</h2>
                         <% if (orders && orders.length > 0) { %>
-                            <ul class="list-group">
+                            <ul class="list-group orders-list">
                                 <% orders.forEach(order => { %>
                                     <li class="list-group-item">
                                         <strong>หมายเลขคำสั่งซื้อ:</strong> <%= order.order_id %><br>
-                                        <strong>ราคารวม:</strong> <%= order.total_price.toFixed(2) %> บาท<br>
                                         <strong>วันที่:</strong> <%= new Date(order.created_at).toLocaleDateString() %><br>
                                         <strong>สถานะ:</strong> 
                                         <span class="badge bg-<%= 
-                                        order.status === 'สำเร็จ' ? 'success' : 
-                                        order.status === 'รอดำเนินการ' ? 'warning' : 
-                                        order.status === 'กำลังจัดส่ง' ? 'primary' : 
-                                        order.status === 'ยกเลิก' ? 'danger' : 'secondary' %>">
-                                        <%= order.status %>
+                                            order.status === 'สำเร็จ' ? 'success' : 
+                                            order.status === 'รอดำเนินการ' ? 'warning' : 
+                                            order.status === 'กำลังจัดส่ง' ? 'primary' : 
+                                            order.status === 'ยกเลิก' ? 'danger' : 'secondary' %>">
+                                            <%= order.status %>
                                         </span>
                                         <br>
+                                
+                                        <strong>สินค้าที่สั่ง:</strong>
+                                        <ul>
+                                            <% order.items.forEach(item => { %>
+                                                <li><%= item.name %> x <%= item.quantity %> = <%= (item.quantity * item.price).toFixed(2) %> บาท</li>
+                                            <% }); %>
+                                        </ul>
+                                        <strong>รวมทั้งหมด: <%= order.totalPrice.toFixed(2) %> บาท</strong>
                                     </li>
-                                    <% }); %>
+                                <% }); %>
                             </ul>
                         <% } else { %>
                             <p class="text-muted">คุณยังไม่มีคำสั่งซื้อ</p>
                         <% } %>
                     </div>
-            </div>
+                </div>              
         </div>
         
     </main>

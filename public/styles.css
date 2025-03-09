@@ -286,6 +286,36 @@ h3, h4 {
 }
 
 
+.orders-list {
+    max-height: 400px; /* กำหนดความสูงสูงสุด */
+    overflow-y: auto;  /* ทำให้สามารถเลื่อนดูได้ */
+    padding-bottom: 20px; /* เพิ่ม padding ด้านล่างเพื่อกันขอบหาย */
+    margin-bottom: 10px; /* ป้องกันการถูกตัดขอบล่าง */
+}
+
+.orders-list .list-group-item {
+    margin-bottom: 15px; /* เพิ่มระยะห่างระหว่างคำสั่งซื้อ */
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    padding: 15px; /* ขยายพื้นที่ภายใน */
+    position: relative; /* ป้องกันการตัดขอบ */
+    z-index: 1; /* ทำให้แน่ใจว่าขอบแสดงผลครบ */
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1); /* เพิ่มเงาเพื่อให้เห็นขอบชัดขึ้น */
+}
+
+
+.list-group-items {
+    margin-bottom: 15px; /* เพิ่มระยะห่างระหว่างคำสั่งซื้อ */
+    padding: 15px; /* เพิ่มระยะห่างภายในกรอบ */
+    border: 1px solid #f0ffe8; /* เพิ่มกรอบ */
+    background-color: white;
+    border-radius: 10px; /* ทำให้มุมกรอบโค้ง */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* เพิ่มเงาเล็กน้อยเพื่อให้ดูมีมิติ */
+}
+
+
+
+
 @media (max-width: 768px) {
     .cart-box {
         position: static; /* ยกเลิก fixed */

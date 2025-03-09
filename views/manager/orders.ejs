@@ -14,11 +14,10 @@
         <h2>คำสั่งซื้อทั้งหมด</h2>
         <div class="list-group">
             <% orders.forEach(order => { %>
-                <div class="list-group-item">
+                <div class="list-group-items">
                     <strong>หมายเลขคำสั่งซื้อ:</strong> <%= order.order_id %><br>
                     <strong>ชื่อลูกค้า:</strong> <%= order.customer_name %><br>
                     <strong>วันที่:</strong> <%= new Date(order.created_at).toLocaleDateString() %><br>
-                    <strong>ราคารวม:</strong> <%= order.total_price.toFixed(2) %> บาท<br>
                     <strong>สถานะ:</strong> 
                     <span class="badge bg-<%= 
                     order.status === 'สำเร็จ' ? 'success' : 
@@ -27,12 +26,21 @@
                     order.status === 'ยกเลิก' ? 'danger' : 'secondary' %>">
                     <%= order.status %>
                     </span>
-
+                    <br>
+    
+                    <strong>สินค้าที่สั่ง:</strong>
+                    <ul>
+                        <% order.items.forEach(item => { %>
+                            <li><%= item.product_name %> x <%= item.quantity %> = <%= (item.quantity * item.price).toFixed(2) %> บาท</li>
+                        <% }); %>
+                    </ul>
+                    <strong>รวมทั้งหมด: <%= order.totalPrice.toFixed(2) %> บาท</strong>
+    
                     <div class="mt-2 d-flex justify-content-between">
                         <!-- ฟอร์มอัพเดทสถานะ -->
                         <form action="/order/update-status/<%= order.order_id %>" method="POST">
                             <div class="d-flex">
-                                <select name="status" class="form-control me-2">
+                                <select name="status" class="form-control me-2" style="background-color: rgb(235, 235, 235);">
                                     <option value="รอดำเนินการ" <%= order.status === 'รอดำเนินการ' ? 'selected' : '' %>>รอดำเนินการ</option>
                                     <option value="กำลังจัดส่ง" <%= order.status === 'กำลังจัดส่ง' ? 'selected' : '' %>>กำลังจัดส่ง</option>
                                     <option value="สำเร็จ" <%= order.status === 'สำเร็จ' ? 'selected' : '' %>>สำเร็จ</option>
@@ -48,11 +56,11 @@
                         </form>
                     </div>
                 </div>
-                
             <% }); %>
         </div>
-        
     </div>
+    
+
     <%- include('../partials/footer') %>
 </body>
 </html>
