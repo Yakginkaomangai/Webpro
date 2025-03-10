@@ -581,18 +581,19 @@ app.post('/order/cancel/:order_id', isManager, (req, res) => {
     const { order_id } = req.params;
 
     // ลบจาก orders
-    db.run('DELETE FROM orders WHERE order_id = ?', [order_id], (err) => {
+    db.run('DELETE FROM order_items WHERE order_id = ?', [order_id], (err) => {
         if (err) {
-            console.error('Error deleting from orders:', err);
-            return res.status(500).send('Error deleting order');
+            console.error('Error deleting from order_items:', err);
+            return res.status(500).send('Error deleting order items');
         }
 
         // ลบจาก order_items
-        db.run('DELETE FROM order_items WHERE order_id = ?', [order_id], (err) => {
+        db.run('DELETE FROM orders WHERE order_id = ?', [order_id], (err) => {
             if (err) {
-                console.error('Error deleting from order_items:', err);
-                return res.status(500).send('Error deleting order items');
+                console.error('Error deleting from orders:', err);
+                return res.status(500).send('Error deleting order');
             }
+    
 
             // รีไดเร็กต์ไปที่หน้าคำสั่งซื้อหลังจากลบเสร็จ
             res.redirect('/manager/orders');
