@@ -9,9 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
     <style>
-        body {
-            padding-left: 50px;
-        }
+
         
         /* ปรับขนาด topping box */
         .topping-item {
@@ -81,6 +79,29 @@
             background-color: #1E7E34;
         }
 
+        .selected-toppings-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.08);
+            margin-top: 20px;
+            border: 2px solid #28a745; /* กรอบสีเขียว */
+            transition: all 0.3s ease-in-out;
+        }
+        .selected-toppings-box h2 {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .selected-toppings-box h5 {
+            color: #555;
+        }
+        .selected-toppings-box ul {
+            padding-left: 20px;
+        }
+
+
          /* Responsive */
         @media (max-width: 768px) {
             .cart-box {
@@ -96,13 +117,20 @@
                 margin-top: 25px;
             }
         }
+
+        .custom_container {
+            padding-left: 50px; /* ปรับค่าให้เหมาะสมตามต้องการ */
+            padding-right: 50px; /* เพื่อความสมดุล */
+        }
+        
+
     </style>
     
 </head>
-<body id="custom-page">
+<body id="custom-page" class="d-flex flex-column min-vh-100">
     
     <%- include('partials/navbar') %>
-
+    <div class="custom_container">       
         <div class="row mt-5 mb-5">
             <div class="col-lg-8">
                 <h2>ปรับแต่งแซนวิชในแบบของคุณ</h2>
@@ -202,16 +230,20 @@
                 </div>
             </div>
 
-            <div class="text-left mt-4">
-                <h2>วัตถุดิบที่เลือก:</h2>
-                <h5 id="selected-toppings">ยังไม่มีวัตถุดิบที่เลือก</h5>
-                <h4>ราคารวม: <span id="total-price">0 บาท</span></h4>
-                <button id="addToCart" class="btn btn-primary">เพิ่มลงตะกร้า</button>
+            <div class="col-lg-8">
+                <div class="selected-toppings-box">
+                    <h2>วัตถุดิบที่เลือก:</h2>
+                    <h5 id="selected-toppings">ยังไม่มีวัตถุดิบที่เลือก</h5>
+                    <h4>ราคารวม: <span id="total-price">0 บาท</span></h4>
+                    <button id="addToCart" class="btn btn-primary">เพิ่มลงตะกร้า</button>
+                </div>
             </div>
+            
                       
             <%- include('partials/cart') %>
         </div>
     </div>
+    
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
