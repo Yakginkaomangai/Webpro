@@ -15,6 +15,7 @@
         .menu-container {
             margin-top: 80px; /* เพิ่มระยะห่างจาก Navbar */
         }
+        
 
         /* ปรับขนาด topping box */
         .topping-item {
@@ -83,23 +84,6 @@
             margin-bottom: 15px;
         }
 
-        
-    
-        /* ปรับ UI ตะกร้าสินค้า */
-        .cart-box {
-            background-color: #f8f9fa; /* เปลี่ยนเป็นสีเทาอ่อนคล้ายรูปตัวอย่าง */
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 20px;
-            max-width: 400px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 500px;
-        }
 
         .cart-header {
             font-size: 18px;
@@ -146,17 +130,17 @@
 
         <div class="row mt-5 mb-5">
             <div class="col-lg-8">
-                <h2>Custom Sandwich</h2>
+                <h2>ปรับแต่งแซนวิชในแบบของคุณ</h2>
                 <img src="/img/promote.png" alt="Custom Sandwich" class="img-fluid rounded">
             </div>
         </div>
 
         <div class="row mt-5">
-            <h3>Add topping</h3>
+            <h3>เลือกวัตถุดิบ</h3>
             <div class="col-lg-8 mt-3">
                 <!-- Bread Category -->
-                <div class="category-box">
-                    <h4 class="mb-3">Bread</h4>
+                <div class="category-box" data-category="bread">
+                    <h4 class="mb-3">ขนมปัง</h4>
                     <div class="row">
                         <% breads.forEach(breads => { %>
                         <div class="col-md-6 mb-3">
@@ -177,8 +161,8 @@
                 </div>
 
                 <!-- Meat Category -->
-                <div class="category-box">
-                    <h4 class="mb-3">Meat</h4>
+                <div class="category-box" data-category="meat">
+                    <h4 class="mb-3">เนื้อสัตว์</h4>
                     <div class="row">
                         <% meats.forEach(meats => { %>
                         <div class="col-md-6 mb-3">
@@ -199,8 +183,8 @@
                 </div>
 
                 <!-- Vegetables Category -->
-                <div class="category-box mt-4">
-                    <h4 class="mb-3">Vegetables</h4>
+                <div class="category-box" data-category="vegetable">
+                    <h4 class="mb-3">ผัก</h4>
                     <div class="row">
                         <% vegetables.forEach(vegetables => { %>
                         <div class="col-md-6 mb-3">
@@ -221,8 +205,8 @@
                 </div>
 
                 <!-- Sauces Category -->
-                <div class="category-box mt-4">
-                    <h4 class="mb-3">Sauces</h4>
+                <div class="category-box" data-category="sauce">
+                    <h4 class="mb-3">ซอส</h4>
                     <div class="row">
                         <% sauces.forEach(sauces => { %>
                         <div class="col-md-6 mb-3">
@@ -243,146 +227,107 @@
                 </div>
             </div>
 
-            <div class="text-center mt-4">
+            <div class="text-left mt-4">
+                <h2>วัตถุดิบที่เลือก:</h2>
+                <h5 id="selected-toppings">ยังไม่มีวัตถุดิบที่เลือก</h5>
                 <h4>ราคารวม: <span id="total-price">0 บาท</span></h4>
                 <button id="addToCart" class="btn btn-primary">เพิ่มลงตะกร้า</button>
             </div>
-            
+                      
             <%- include('partials/cart') %>
         </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-    let selectedToppings = [];
-    let totalPrice = 0;
-
-    // ฟังก์ชันอัปเดตการแสดงผลของตะกร้า
-    function updateCartDisplay() {
-        const selectedToppingsElement = document.getElementById("selected-toppings");
-        if (selectedToppingsElement) {
-            selectedToppingsElement.innerHTML = selectedToppings.length ? selectedToppings.join(", ") : "ไม่มีท็อปปิ้งที่เลือก";
-        }
-
-        const totalPriceElement = document.getElementById("total-price");
-        if (totalPriceElement) {
-            totalPriceElement.textContent = totalPrice + " บาท";
-        }
-    }
-
-    // ตรวจสอบว่าองค์ประกอบมีอยู่ก่อนใช้งาน
-    const addToCartButton = document.getElementById("addToCart");
-    if (addToCartButton) {
-        addToCartButton.addEventListener("click", function () {
-            if (selectedToppings.length === 0) {
-                alert("กรุณาเลือกท็อปปิ้งอย่างน้อย 1 รายการ");
-                return;
+            let selectedToppings = [];
+            let totalPrice = 0;
+        
+            // ฟังก์ชันอัปเดตการแสดงผลของตะกร้า
+            function updateCartDisplay() {
+                const selectedToppingsElement = document.getElementById("selected-toppings");
+                if (selectedToppingsElement) {
+                    // แสดงรายการวัตถุดิบที่เลือกในรูปแบบ <ul> และ <li>
+                    if (selectedToppings.length > 0) {
+                        selectedToppingsElement.innerHTML = "<ul>" + selectedToppings.map(item => 
+                            `<li>${item.name} x 1</li>`
+                        ).join("") + "</ul>";
+                    } else {
+                        selectedToppingsElement.innerHTML = "ยังไม่มีวัตถุดิบที่เลือก";
+                    }
+                }
+        
+                const totalPriceElement = document.getElementById("total-price");
+                if (totalPriceElement) {
+                    totalPriceElement.textContent = totalPrice + " บาท";
+                }
             }
-
-            let orderData = {
-                name: "Custom Sandwich",
-                toppings: selectedToppings,
-                total_price: totalPrice
-            };
-            console.log(orderData); // ตรวจสอบข้อมูลที่ส่งไป
-
-            // ส่งข้อมูลไปยัง API
-            fetch("/add-to-cart", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(orderData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+        
+            const checkboxes = document.querySelectorAll(".topping-checkbox");
+            if (checkboxes.length > 0) {
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener("change", function () {
+                        let name = this.dataset.name;
+                        let price = parseFloat(this.dataset.price);
+        
+                        if (this.checked) {
+                            selectedToppings.push({ name, price });
+                            totalPrice += price;
+                        } else {
+                            selectedToppings = selectedToppings.filter(item => item.name !== name);
+                            totalPrice -= price;
+                        }
+                        updateCartDisplay();
+                    });
+                });
+            }
+        
+            // 🛒 ฟังก์ชันเพิ่มสินค้าเข้าตะกร้า
+            document.getElementById("addToCart").addEventListener("click", function () {
+                if (selectedToppings.length === 0) {
+                    alert("กรุณาเลือกท็อปปิ้งก่อนเพิ่มลงตะกร้า!");
+                    return;
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert("เพิ่มลงตะกร้าสำเร็จ!");
-                    // อัปเดต DOM เพื่อแสดงข้อมูลในตะกร้า
-                    updateCartDisplay();  // อัปเดตตะกร้า
-                } else {
-                    alert("เกิดข้อผิดพลาด กรุณาลองอีกครั้ง");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("เกิดข้อผิดพลาดในการเพิ่มสินค้า");
+        
+                // ส่งข้อมูลไปยังเซิร์ฟเวอร์
+                fetch("/cart/add", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        product_id: "999", // หรือใช้ ID จริงของสินค้า
+                        product_name: "Custom Sandwich",
+                        price: totalPrice,
+                        quantity: 1,
+                        toppings: selectedToppings
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("เกิดข้อผิดพลาด: " + data.error);
+                    } else {
+                        alert(data.message);
+        
+                        // อัปเดตการแสดงผลของตะกร้า
+                        selectedToppings = [];
+                        totalPrice = 0;
+                        checkboxes.forEach(checkbox => checkbox.checked = false);
+                        fetchCart();
+        
+                        // รีเฟรชตะกร้าในหน้าเว็บโดยไม่ต้องรีโหลดหน้า
+                        const cartItemsContainer = document.querySelector(".cart-items-container");
+                        if (cartItemsContainer) {
+                            cartItemsContainer.innerHTML += `<div class="cart-item">${data.message}</div>`;
+                        }
+                    }
+                })
+                .catch(error => console.error("Error:", error));
             });
         });
-    }
-
-    // ดึงข้อมูลท็อปปิ้งจาก API
-    fetch('/get-toppings')
-    .then(response => response.json())
-    .then(data => {
-        console.log("📌 Data Loaded:", data);
-
-        // ค้นหาหมวดหมู่จาก HTML
-        let categories = {
-            meat: document.querySelector(".category-box[data-category='meat'] .row"),
-            vegetable: document.querySelector(".category-box[data-category='vegetable'] .row"),
-            sauce: document.querySelector(".category-box[data-category='sauce'] .row"),
-        };
-
-        // เคลียร์ข้อมูลเดิม
-        Object.values(categories).forEach(container => container.innerHTML = "");
-
-        // เติมข้อมูล
-        data.forEach(topping => {
-            let category = categories[topping.type];
-            if (category) {
-                let itemHTML = `
-                    <div class="col-md-6 mb-3">
-                        <div class="topping-item">
-                            <img src="${topping.img}" alt="${topping.name}">
-                            <div class="details">
-                                <h5 class="mb-1">${topping.thname}</h5>  <!-- ชื่อท็อปปิ้งภาษาไทย -->
-                                <p class="text-success fw-bold">${topping.price} บาท</p>
-                            </div>
-                            <label class="checkbox-container">
-                                <input type="checkbox" class="topping-checkbox" data-name="${topping.name}" data-price="${topping.price}">
-                                <span class="checkmark"></span>
-                            </label>
-                        </div>
-                    </div>
-                `;
-                category.insertAdjacentHTML("beforeend", itemHTML);
-            } else {
-                console.error(`ไม่พบหมวดหมู่ ${topping.type} สำหรับท็อปปิ้งนี้`);
-            }
-        });
-    })
-    .catch(error => {
-        console.error("❌ Error fetching toppings:", error);
-        alert("เกิดข้อผิดพลาดในการดึงข้อมูลท็อปปิ้ง");
-    });
-
-    // ตรวจสอบ checkbox
-    const checkboxes = document.querySelectorAll(".topping-checkbox");
-    if (checkboxes.length > 0) {
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener("change", function () {
-                let name = this.dataset.name;
-                let price = parseFloat(this.dataset.price);
-
-                if (this.checked) {
-                    selectedToppings.push(name);
-                    totalPrice += price;
-                } else {
-                    selectedToppings = selectedToppings.filter(item => item !== name);
-                    totalPrice -= price;
-                }
-                updateCartDisplay();
-            });
-        });
-    }
-});
-
+        
+        
     </script>
     
     <%- include('partials/footer') %>

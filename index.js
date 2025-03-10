@@ -967,43 +967,6 @@ app.get('/cart/items', (req, res) => {
     });
 }); 
 
-// API สำหรับเพิ่ม Custom Sandwich ลงตะกร้า
-app.post('/add-to-cart', (req, res) => {
-    const { name, toppings, total_price } = req.body;
-    console.log("ข้อมูลที่รับมา:", req.body);
-        
-    const toppingsDescription = toppings.join(", ");
-    const user_id = req.session.user.id;  // ตรวจสอบว่า user ได้เข้าสู่ระบบหรือไม่
-
-    if (!user_id) {
-        return res.status(401).json({ error: 'กรุณาล็อกอินก่อนทำการสั่งซื้อ' });
-    }
-
-    // บันทึก Custom Sandwich ลงในฐานข้อมูล
-    db.run(
-        "INSERT INTO cart (user_id, item_name, description, price) VALUES (?, ?, ?, ?)",
-        [user_id, name, toppingsDescription, total_price],
-        function (err) {
-            if (err) {
-                return res.status(500).
-                json({ error: err.message });
-            }
-            res.json({ success: true, order_id: this.lastID });
-        }
-    );
-});
-
-
-// API สำหรับดึงท็อปปิ้งจากตาราง ingredients
-app.get('/get-toppings', (req, res) => {
-    db.all("SELECT ingre_id, name, thname, img, price FROM ingredients", [], (err, rows) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ error: "Error fetching toppings" });
-        }
-        res.json(rows);  // ส่งข้อมูลท็อปปิ้งกลับไปยังฟรอนต์เอนด์
-    });
-});
 
 
 app.post('/submit-order', (req, res) => {
