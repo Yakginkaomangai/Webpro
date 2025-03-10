@@ -21,27 +21,27 @@
                 <form action="/user/useredit/<%= users.user_id %>" method="POST" enctype="multipart/form-data">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">ชื่อจริง *</label>
+                            <label class="form-label">ชื่อจริง</label>
                             <input type="text" class="form-control" name="first_name" value="<%= users.first_name %>" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">นามสกุล *</label>
+                            <label class="form-label">นามสกุล</label>
                             <input type="text" class="form-control" name="last_name" value="<%= users.last_name %>" required>
                         </div>
                     </div>
         
                     <div class="mb-3">
-                        <label class="form-label">วันเกิด *</label>
+                        <label class="form-label">วันเกิด</label>
                         <input type="date" class="form-control" name="dob" value="<%= users.dob %>" required>
                     </div>
         
                     <div class="mb-3">
-                        <label class="form-label">อีเมล *</label>
+                        <label class="form-label">อีเมล</label>
                         <input type="email" class="form-control" name="email" value="<%= users.email %>" required>
                     </div>
         
                     <div class="mb-3">
-                        <label class="form-label">เบอร์โทรศัพท์ *</label>
+                        <label class="form-label">เบอร์โทรศัพท์</label>
                         <input type="tel" class="form-control" name="phone" value="<%= users.phone %>" required>
                     </div>
         
@@ -68,7 +68,7 @@
                     </div>
         
                     <div class="mb-3">
-                        <label class="form-label">ยืนยันรหัสผ่าน *</label>
+                        <label class="form-label">ยืนยันรหัสผ่านใหม่ *</label>
                         <input type="password" class="form-control" name="confirm_password">
                     </div>
         

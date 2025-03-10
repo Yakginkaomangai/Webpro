@@ -81,7 +81,7 @@ app.get('/admin/menu/add', isAdmin, (req, res) => {
 
 // เพิ่มเมนูในฐานข้อมูล
 app.post('/admin/menu/add', (req, res) => {
-    const { name, thname, price, type } = req.body;
+    const { name, thname, price, type, description } = req.body;
     
     // ตรวจสอบค่าที่ได้รับจากฟอร์ม
     if (!name || !thname || !price || !type) {
@@ -106,8 +106,8 @@ app.post('/admin/menu/add', (req, res) => {
             }
 
             db.run(
-                'INSERT INTO menu (name, thname, price, type, img) VALUES (?, ?, ?, ?, ?)',
-                [name, thname, price, type, imgPath],
+                'INSERT INTO menu (name, thname, price, type, description, img) VALUES (?, ?, ?, ?, ?, ?)',
+                [name, thname, price, type, description, imgPath],
                 (err) => {
                     if (err) {
                         console.error(err);
@@ -141,7 +141,7 @@ app.get('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
 // อัปเดตเมนูในฐานข้อมูล
 app.post('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
     const { menu_id } = req.params;
-    const { name, thname, price, type } = req.body;
+    const { name, thname, price, type, description } = req.body;
     let newImg = req.files?.img;
 
     // ดึง path รูปเดิมจากฐานข้อมูล
@@ -171,8 +171,8 @@ app.post('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
                 }
 
                 // อัปเดตฐานข้อมูลพร้อม path รูปใหม่
-                const sql = `UPDATE menu SET name = ?, thname = ?, price = ?, type = ?, img = ? WHERE menu_id = ?`;
-                db.run(sql, [name, thname, price, type, imgPath, menu_id], function (err) {
+                const sql = `UPDATE menu SET name = ?, thname = ?, price = ?, type = ?, description = ?, img = ? WHERE menu_id = ?`;
+                db.run(sql, [name, thname, price, type, description, imgPath, menu_id], function (err) {
                     if (err) {
                         console.error(err);
                         return res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตเมนู');
@@ -182,8 +182,8 @@ app.post('/admin/menu/edit/:menu_id', isAdmin, (req, res) => {
             });
         } else {
             // ถ้าไม่มีการอัปโหลดใหม่ ให้อัปเดตข้อมูลโดยใช้ path รูปเดิม
-            const sql = `UPDATE menu SET name = ?, thname = ?, price = ?, type = ?, img = ? WHERE menu_id = ?`;
-            db.run(sql, [name, thname, price, type, imgPath, menu_id], function (err) {
+            const sql = `UPDATE menu SET name = ?, thname = ?, price = ?, type = ?, description = ?, img = ? WHERE menu_id = ?`;
+            db.run(sql, [name, thname, price, type, description, imgPath, menu_id], function (err) {
                 if (err) {
                     console.error(err);
                     return res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตเมนู');
@@ -586,6 +586,7 @@ app.post('/order/cancel/:order_id', isManager, (req, res) => {
             console.error('Error deleting from order_items:', err);
             return res.status(500).send('Error deleting order items');
         }
+
 
         // ลบจาก order_items
         db.run('DELETE FROM orders WHERE order_id = ?', [order_id], (err) => {
